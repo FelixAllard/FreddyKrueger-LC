@@ -22,7 +22,7 @@ source = "../bin/Release/netstandard2.1/ExampleEnemy.dll"
 target = "plugins/ExampleEnemy/"
 
 [[build.copy]]
-source = "../../UnityProject/AssetBundles/StandaloneWindows/modassets"
+source = "../../FreddyKrueger/AssetBundles/StandaloneWindows/modassets"
 target = "plugins/ExampleEnemy/"
 
 [[build.copy]]
