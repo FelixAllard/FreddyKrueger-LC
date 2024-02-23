@@ -7,9 +7,9 @@
 		<!-- This assembly description doesn't show up on Thunderstore. -->
     <AssemblyName>ExampleEnemy</AssemblyName>
     <!-- Configure description for Thunderstore at ./Thunderstore/thunderstore.toml -->
-    <Description>Example Enemy for Lethal Company.</Description>
+    <Description>Freddy Krueger</Description>
 		<!-- This is the version of your plugin. This will be used by tcli when building our Thunderstore package. -->
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
 		<!-- This is required for BepInEx to load us properly. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- This allows you to use C#11 features, for the most part. -->
@@ -28,7 +28,7 @@
   </PropertyGroup>
   <PropertyGroup>
 	  <!-- Your Thunderstore Team name. This will be used by tcli when building our Thunderstore package. -->
-    <ThunderstoreTeam>Hamunii</ThunderstoreTeam>
+    <ThunderstoreTeam>Xilef992</ThunderstoreTeam>
   </PropertyGroup>
 
   <ItemGroup>
@@ -67,6 +67,6 @@
   <!-- Build our Thunderstore package when making a release build. This does not publish our package. -->
   <!-- For more information about tcli, see https://github.com/thunderstore-io/thunderstore-cli/wiki -->
   <Target Name="PackThunderstore" DependsOnTargets="NetcodePatch" AfterTargets="PostBuildEvent" Condition="$(Configuration) == 'Release'">
-    <Exec Command="dotnet tcli build --config-path &quot;$(ProjectDir)Thunderstore/thunderstore.toml&quot; --package-version $(Version) --package-name $(AssemblyName) --package-namespace $(ThunderstoreTeam)"  />
+    <Exec Command="dotnet tcli build --config-path &quot;$(ProjectDir)Thunderstore/thunderstore.toml&quot; --package-version $(Version) --package-name FreddyKrueger --package-namespace $(ThunderstoreTeam)"  />
   </Target>
 </Project>
