@@ -8,7 +8,7 @@ using static LethalLib.Modules.Enemies;
 using BepInEx.Logging;
 using System.IO;
 
-namespace ExampleEnemy {
+namespace FreddyKrueger {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency(LethalLib.Plugin.ModGUID)] 
     public class Plugin : BaseUnityPlugin {

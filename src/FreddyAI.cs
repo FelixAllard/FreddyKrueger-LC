@@ -1,4 +1,4 @@
-﻿namespace ExampleEnemy;
+﻿namespace FreddyKrueger;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -60,7 +60,7 @@ public class PlayerSleep
     public int targetPoint;
 }
 
-public class FreddyAI_2 : EnemyAI
+public class FreddyAI : EnemyAI
 {
     
     //COMPONENTS IMPORT
