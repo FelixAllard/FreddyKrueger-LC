@@ -1,18 +1,16 @@
-﻿namespace FreddyKrueger;
+﻿using UnityEngine.Bindings;
+using UnityEngine.Serialization;
+
+namespace FreddyKrueger;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using DunGen;
 using GameNetcodeStuff;
-using JetBrains.Annotations;
-using LethalLib.Modules;
 using LethalNetworkAPI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 //COMPONENTS IMPORTS
 
@@ -66,19 +64,19 @@ public class FreddyAI : EnemyAI
     //COMPONENTS IMPORT
     //---------------------------------
     //AUDIO
-    public AudioClip Laugh1;
-    public AudioClip Laugh2;
-    public AudioClip Laugh3;
-    public AudioClip Laugh4;
-    public AudioClip Laugh5;
-    public AudioClip Laugh6;
-    public AudioClip Laugh7;
-    public AudioClip Laugh8;
-    public AudioClip Laugh9;
-    public AudioClip Laugh10;
-    public AudioClip InTheNightmare;
-    public AudioClip EnterTheDream;
-    public AudioClip Terminus;
+    [FormerlySerializedAs("Laugh1")] public AudioClip laugh1;
+    [FormerlySerializedAs("Laugh2")] public AudioClip laugh2;
+    [FormerlySerializedAs("Laugh3")] public AudioClip laugh3;
+    [FormerlySerializedAs("Laugh4")] public AudioClip laugh4;
+    [FormerlySerializedAs("Laugh5")] public AudioClip laugh5;
+    [FormerlySerializedAs("Laugh6")] public AudioClip laugh6;
+    [FormerlySerializedAs("Laugh7")] public AudioClip laugh7;
+    [FormerlySerializedAs("Laugh8")] public AudioClip laugh8;
+    [FormerlySerializedAs("Laugh9")] public AudioClip laugh9;
+    [FormerlySerializedAs("Laugh10")] public AudioClip laugh10;
+    [FormerlySerializedAs("InTheNightmare")] public AudioClip inTheNightmare;
+    [FormerlySerializedAs("EnterTheDream")] public AudioClip enterTheDream;
+    [FormerlySerializedAs("Terminus")] public AudioClip terminus;
     
     //TRANSFORMER
     public Transform turnCompass;
@@ -86,35 +84,35 @@ public class FreddyAI : EnemyAI
     public AudioSource oneShotCreature;
     
     //2D ARRAY 
-    private List<PlayerSleep> playerSleep;
+    private List<PlayerSleep> _playerSleep;
 
-    private List<PlayerSleep> playerSleepServ;
+    private List<PlayerSleep> _playerSleepServ;
     
     
     
     //POST MAIL Array 2D
-    private LethalServerMessage<List<PlayerSleep>> ServerMessageSleepArray;
+    private LethalServerMessage<List<PlayerSleep>> _serverMessageSleepArray;
     
-    private LethalClientMessage<List<PlayerSleep>> ClientReceiveSleepAray;
+    private LethalClientMessage<List<PlayerSleep>> _clientReceiveSleepArray;
     
     //Post Mail behavior Int
-    private LethalServerMessage<int> ServerMessageBehavior;
+    private LethalServerMessage<int> _serverMessageBehavior;
     
-    private LethalClientMessage<int> ClientReceiveBehavior;
+    private LethalClientMessage<int> _clientReceiveBehavior;
     //Fast info
-    private ulong clientID;
-    private ulong lastSleepMeter;
+    private ulong _clientID;
+    private ulong _lastSleepMeter;
 
     private int indexSleepArrayTarget = -1;
-    private int indexSleepArraySleep = -1;
+    private int _indexSleepArraySleep = -1;
     
     
-    private PlayerControllerB TargetPlayer;
-    private int BehaviourIndexServer;
-    private bool justSwitchedBehaviour;
+    private PlayerControllerB _targetPlayer;
+    private int _behaviourIndexServer;
+    private bool _justSwitchedBehaviour;
     //RunningClaw Verifications;
-    private bool wasInsideFactory;
-    private bool triggerTeleportDoor;
+    private bool _wasInsideFactory;
+    private bool _triggerTeleportDoor;
 
     enum State {
         Spawning,
@@ -129,54 +127,52 @@ public class FreddyAI : EnemyAI
         EnemyMeshAndPerson(false);
         if (IsServer)
         {
-            playerSleepServ = new List<PlayerSleep>();
-            for (int count = 0; count < RoundManager.Instance.playersManager.allPlayerScripts.Length; count++)
+            _playerSleepServ = new List<PlayerSleep>();
+            foreach (var t in RoundManager.Instance.playersManager.allPlayerScripts)
             {
-                //Adds All the player with There client ID, sleep meter 0 and Desactivate the target player
-                if (RoundManager.Instance.playersManager.allPlayerScripts[count].isPlayerControlled)
+                //Adds All the player with There client ID, sleep meter 0 and deactivated the target player
+                if (t.isPlayerControlled)
                 {
-                    playerSleepServ.Add(new PlayerSleep(
-                        RoundManager.Instance.playersManager.allPlayerScripts[count].GetClientId(), 
+                    _playerSleepServ.Add(new PlayerSleep(
+                        t.GetClientId(), 
                         0, 
                         false
-                        ));
+                    ));
                 }
             }
-
-            PlayerControllerB me = RoundManager.Instance.playersManager.allPlayerScripts[0];
             
-            
-            BehaviourIndexServer = 0;
-            justSwitchedBehaviour = true;
+            _behaviourIndexServer = 0;
+            _justSwitchedBehaviour = true;
         }
         
         //Message service Array 2D
-        ServerMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "customIdentifier");
-        ClientReceiveSleepAray = new LethalClientMessage<List<PlayerSleep>>(identifier: "customIdentifier", onReceived: ActualiseClientSleep);
+        _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "customIdentifier");
+        _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: "customIdentifier", onReceived: ActualiseClientSleep);
         //Mesage service int 8
-        ServerMessageBehavior = new LethalServerMessage<int>(identifier: "customIdentifier");
-        ClientReceiveBehavior = new LethalClientMessage<int>(identifier: "customIdentifier", onReceived: SetClientBehavior);
+        _serverMessageBehavior = new LethalServerMessage<int>(identifier: "customIdentifier");
+        _clientReceiveBehavior = new LethalClientMessage<int>(identifier: "customIdentifier", onReceived: SetClientBehavior);
         
         //ClientReceiveSleepAray.OnReceived += ActualiseClientSleepServer; Useless Server Receive Logic
-        ClientReceiveSleepAray.OnReceived += ActualiseClientSleep;
+        _clientReceiveSleepArray.OnReceived += ActualiseClientSleep;
         //Behavior SEND Int
-        ClientReceiveBehavior.OnReceived += SetClientBehavior;
+        _clientReceiveBehavior.OnReceived += SetClientBehavior;
 
-        clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
+        _clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
     }
     
-    [NonSerialized] private double timer =0;
+    [NonSerialized] private double _timer =0;
     public override void Update()
     {
         base.Update();
         
         if (IsHost)
         {
-            timer += Time.deltaTime;
-            if (timer >= 1)
+            _timer += Time.deltaTime;
+            if (_timer >= 1)
             {
+                
                 UpdateSleep();
-                timer = 0;
+                _timer = 0;
             }
         }
     }
@@ -185,13 +181,13 @@ public class FreddyAI : EnemyAI
     {
         base.DoAIInterval();
         
-        if (TargetPlayer != null)
+        if (_targetPlayer != null)
         {
-            SetDestinationToPosition(TargetPlayer.transform.position);
-            if (TargetPlayer.isInsideFactory != wasInsideFactory)
+            SetDestinationToPosition(_targetPlayer.transform.position);
+            if (_targetPlayer.isInsideFactory != _wasInsideFactory)
             {
-                triggerTeleportDoor = true;
-                wasInsideFactory = TargetPlayer.isInsideFactory;
+                _triggerTeleportDoor = true;
+                _wasInsideFactory = _targetPlayer.isInsideFactory;
             }
         }
 
@@ -208,62 +204,62 @@ public class FreddyAI : EnemyAI
             //     
             //     break;
             case (int)State.Walking:
-                if (justSwitchedBehaviour)
+                if (_justSwitchedBehaviour)
                 {
                     TeleportRandomlyAroundPlayer(10, 20);
                     IdleFreddy();
                     creatureAnimator.SetBool("Walking",true);
                     agent.speed = 3f;
-                    justSwitchedBehaviour = false;
+                    _justSwitchedBehaviour = false;
                     
                 }
-                if (!SetDestinationToPosition(TargetPlayer.transform.position, true) && TargetPlayer != null)
+                if (!SetDestinationToPosition(_targetPlayer.transform.position, true) && _targetPlayer != null)
                 {
                     TeleportRandomlyAroundPlayer(20, 30);
                 }
                 StartCoroutine(teleportCooldown());
                 break;
             case (int)State.Running:
-                if (justSwitchedBehaviour)
+                if (_justSwitchedBehaviour)
                 {
                     
                     TeleportRandomlyAroundPlayer(20, 30);
                     IdleFreddy();
                     creatureAnimator.SetBool("Running", true);
                     agent.speed = 7f;
-                    justSwitchedBehaviour = false;
+                    _justSwitchedBehaviour = false;
                 }
                 StartCoroutine(teleportCooldown());
                 break;
             case (int)State.RunningClaw:
-                if (justSwitchedBehaviour)
+                if (_justSwitchedBehaviour)
                 {
                     TeleportRandomlyAroundPlayer(40, 70);
                     IdleFreddy();
                     creatureAnimator.SetBool("RunWithClaw", true);
                     agent.speed = 6f;
                     
-                    justSwitchedBehaviour = false;
+                    _justSwitchedBehaviour = false;
                 }
-                if (triggerTeleportDoor)
+                if (_triggerTeleportDoor)
                 {
                     TeleportRandomlyAroundPlayer(30, 60);
-                    triggerTeleportDoor = false;
+                    _triggerTeleportDoor = false;
                 }
-                if (!TargetPlayer.isPlayerControlled && IsHost)
+                if (!_targetPlayer.isPlayerControlled && IsHost)
                 {
                     ChooseTarget();
                 }
                 
                 break;
             case (int)State.Sneaking:
-                if (justSwitchedBehaviour)
+                if (_justSwitchedBehaviour)
                 {
                     TeleportRandomlyAroundPlayer(15, 20);
                     IdleFreddy();
                     agent.speed = 2f;
                     creatureAnimator.SetBool("Sneaking", true);
-                    justSwitchedBehaviour = false;
+                    _justSwitchedBehaviour = false;
                     
                     
                 }
@@ -271,7 +267,7 @@ public class FreddyAI : EnemyAI
 
                 // Calculate the screen position of the object's center
                 //IDK IF IT IS THE RIGHT CAMERA
-                Vector3 screenPoint = TargetPlayer.gameplayCamera.WorldToViewportPoint(bounds.center);
+                Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(bounds.center);
 
                 // Check if the object is within the camera's view
                 bool isVisible = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
@@ -323,36 +319,36 @@ public class FreddyAI : EnemyAI
     public void UpdateSleep()
     {
 
-        for (int count = 0; count < playerSleepServ.Count; count++)
+        for (int count = 0; count < _playerSleepServ.Count; count++)
         {
-            PlayerControllerB player = playerSleepServ[count].ClientID.GetPlayerController();
+            PlayerControllerB player = _playerSleepServ[count].ClientID.GetPlayerController();
             //HANDLE DEAD PLAYER
             if (!player.isPlayerControlled)
             {
                 //Remove DEAD player for target list
-                playerSleepServ.RemoveAt(count);
+                _playerSleepServ.RemoveAt(count);
             }
             else
             {
                 if (CheckIfAlone(player))
                 {
                     // Add 1 to the value of the player THAT IS ALONE
-                    playerSleepServ[count].SleepMeter += 1;
+                    _playerSleepServ[count].SleepMeter += 1;
                 }
                 else
                 {
                     // Remove 1 from the value of the player in the dictionary
-                    if (playerSleepServ[count].SleepMeter > 0)
+                    if (_playerSleepServ[count].SleepMeter > 0)
                     {
-                        if (playerSleepServ[count].SleepMeter == 1)
+                        if (_playerSleepServ[count].SleepMeter == 1)
                         {
                             //Handle if it is 1
-                            playerSleepServ[count].SleepMeter = 0;
+                            _playerSleepServ[count].SleepMeter = 0;
                         }
                         else
                         {
                             //handle if more than 1
-                            playerSleepServ[count].SleepMeter -= 2;
+                            _playerSleepServ[count].SleepMeter -= 2;
                         }
                     }
                 }
@@ -360,33 +356,33 @@ public class FreddyAI : EnemyAI
             
         }
         //IF not running with claw
-        if(BehaviourIndexServer != 3)
+        if(_behaviourIndexServer != 3)
         {
             if (IsHost)
             {
                 ChooseTarget();
             }
         }
-        Debug.Log("SERVER SIDE" + playerSleepServ[0].SleepMeter);
+        Debug.Log("SERVER SIDE" + _playerSleepServ[0].SleepMeter);
         
         //Sending computation to all clients
-        ServerMessageSleepArray.SendAllClients(playerSleepServ);
+        _serverMessageSleepArray.SendAllClients(_playerSleepServ);
     }
     public bool CheckIfAlone(PlayerControllerB player)
     {
         //GET Player Position
         Vector3 currentPlayerPosition = player.transform.position;
 
-        for (int count = 0; count < playerSleepServ.Count; count++)
+        for (int count = 0; count < _playerSleepServ.Count; count++)
         {
-            if (playerSleepServ[count].ClientID != player.GetClientId())
+            if (_playerSleepServ[count].ClientID != player.GetClientId())
             {
-                Vector3 otherPlayerPosition = playerSleepServ[count].ClientID.GetPlayerController().transform.position;
+                Vector3 otherPlayerPosition = _playerSleepServ[count].ClientID.GetPlayerController().transform.position;
                 // Calculate the distance between the current player and the other player
                 float distance = Vector3.Distance(currentPlayerPosition, otherPlayerPosition);
 
                 // Check if the distance is within the specified range
-                if (distance <= 10f && player != playerSleepServ[count].ClientID.GetPlayerController())
+                if (distance <= 10f && player != _playerSleepServ[count].ClientID.GetPlayerController())
                 {
                     // If the distance is less than or equal to 10, the current player is considered with another player
                     return false;
@@ -406,11 +402,11 @@ public class FreddyAI : EnemyAI
     {
         List<PlayerSleep> possibleTarget = new List<PlayerSleep>();
         //FInd which Player has a score over 260!!!
-        for (int count = 0; count < playerSleepServ.Count; count++)
+        for (int count = 0; count < _playerSleepServ.Count; count++)
         {
-            if (playerSleepServ[count].SleepMeter >= 260) //SLEEP METER TRESHOLD --- IMPORTANT
+            if (_playerSleepServ[count].SleepMeter >= 260) //SLEEP METER TRESHOLD --- IMPORTANT
             {
-                possibleTarget.Add(playerSleepServ[count]);
+                possibleTarget.Add(_playerSleepServ[count]);
             }
         }
         //Sort from highest ot lowest
@@ -487,7 +483,7 @@ public class FreddyAI : EnemyAI
             }
         }
         //Target player Becomes true for the target player and false for the rest
-        foreach (var player in playerSleepServ)
+        foreach (var player in _playerSleepServ)
         {
             if (player.ClientID == highestSleepPoints.ClientID)
             {
@@ -514,43 +510,43 @@ public class FreddyAI : EnemyAI
     
     public void SetBehavior()
     {
-        if (TargetPlayer != null)
+        if (_targetPlayer != null)
         {
             bool updateToClient = false;
-            if (playerSleepServ[indexSleepArraySleep].SleepMeter >=260 && playerSleepServ[indexSleepArraySleep].SleepMeter <400)
+            if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >=260 && _playerSleepServ[_indexSleepArraySleep].SleepMeter <400)
             {
                 //WALKING
-                BehaviourIndexServer = 1;
+                _behaviourIndexServer = 1;
                 
-                if (playerSleepServ[indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(300,450))
+                if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(300,450))
                 {
                     if (currentBehaviourStateIndex != 2)
                     {
-                        BehaviourIndexServer = 2;
+                        _behaviourIndexServer = 2;
                         updateToClient = true;
                     }
                     //RUNNING
                 }
-                else if (playerSleepServ[indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(350, 450))
+                else if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(350, 450))
                 {
                     //Sneaking
                     if (currentBehaviourStateIndex != 4)
                     {
-                        BehaviourIndexServer = 4;
+                        _behaviourIndexServer = 4;
                         updateToClient = true;
                     }
                 }
                
             }
-            else if(playerSleepServ[indexSleepArraySleep].SleepMeter >=400)
+            else if(_playerSleepServ[_indexSleepArraySleep].SleepMeter >=400)
             {
                 //KILL time
-                BehaviourIndexServer = 3;
+                _behaviourIndexServer = 3;
             }
             //If The state is different, it sends to clients
             if (updateToClient)
             {
-                ServerMessageBehavior.SendAllClients(BehaviourIndexServer,true);
+                _serverMessageBehavior.SendAllClients(_behaviourIndexServer,true);
             }
         }
     }
@@ -570,30 +566,30 @@ public class FreddyAI : EnemyAI
     {
         var count = 0;
         bool isThereTarget = false;
-        foreach (var player in playerSleep)
+        foreach (var player in _playerSleep)
         {
 
             //Handle if LocalPlayer = Target player
-            if (player.ClientID == clientID)
+            if (player.ClientID == _clientID)
             {
                 //Add the array number of the local player too indexSleepArraySleep
-                if (indexSleepArraySleep == -1)
+                if (_indexSleepArraySleep == -1)
                 {
-                    indexSleepArraySleep = count;
+                    _indexSleepArraySleep = count;
                 }
             }
             //Set target Player
             //CONDITION = Player is target plauer
             if(player.IsTargetPlayer)
             {
-                TargetPlayer = player.ClientID.GetPlayerController();
+                _targetPlayer = player.ClientID.GetPlayerController();
                 isThereTarget = true;
             }
             count++;
         }
         if (isThereTarget)
         {
-            TargetPlayer = null;
+            _targetPlayer = null;
         }
     }
 
@@ -618,7 +614,7 @@ public class FreddyAI : EnemyAI
                 Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.forward;
 
                 // Calculate the teleport position
-                teleportPosition = TargetPlayer.transform.position + direction * distance;
+                teleportPosition = _targetPlayer.transform.position + direction * distance;
 
                 // Ensure the teleport position is on the NavMesh
                 NavMeshHit hit;
@@ -626,11 +622,11 @@ public class FreddyAI : EnemyAI
                 {
                     // Teleport the Krueger to the calculated position
                     agent.Warp(hit.position); // Teleport the Krueger to the valid position on the NavMesh
-                    if(SetDestinationToPosition(TargetPlayer.transform.position, true))
+                    if(SetDestinationToPosition(_targetPlayer.transform.position, true))
                     {
                         foundValidPosition = true;
                     }
-                    turnCompass.LookAt(TargetPlayer.gameplayCamera.transform.position);
+                    turnCompass.LookAt(_targetPlayer.gameplayCamera.transform.position);
 
                     // If a valid path is found, set destination to the player's position
                     //agent.SetDestination(targetPlayer.transform.position);
@@ -659,34 +655,34 @@ public class FreddyAI : EnemyAI
         switch (RandomNumberGenerator.GetInt32(1,11))
         {
             case(1) :
-                creatureVoice.PlayOneShot(Laugh1);
+                creatureVoice.PlayOneShot(laugh1);
                 break;
             case(2) :
-                creatureVoice.PlayOneShot(Laugh2);
+                creatureVoice.PlayOneShot(laugh2);
                 break;
             case(3):
-                creatureVoice.PlayOneShot(Laugh3);
+                creatureVoice.PlayOneShot(laugh3);
                 break;
             case(4) :
-                creatureVoice.PlayOneShot(Laugh4);
+                creatureVoice.PlayOneShot(laugh4);
                 break;
             case(5) :
-                creatureVoice.PlayOneShot(Laugh5);
+                creatureVoice.PlayOneShot(laugh5);
                 break;
             case(6):
-                creatureVoice.PlayOneShot(Laugh6);
+                creatureVoice.PlayOneShot(laugh6);
                 break;
             case(7) :
-                creatureVoice.PlayOneShot(Laugh7);
+                creatureVoice.PlayOneShot(laugh7);
                 break;
             case(8) :
-                creatureVoice.PlayOneShot(Laugh8);
+                creatureVoice.PlayOneShot(laugh8);
                 break;
             case(9):
-                creatureVoice.PlayOneShot(Laugh9);
+                creatureVoice.PlayOneShot(laugh9);
                 break;
             case(10) :
-                creatureVoice.PlayOneShot(Laugh10);
+                creatureVoice.PlayOneShot(laugh10);
                 break;
             default:
                 Debug.LogError("Number Generated for laugh was a miss!");
@@ -754,11 +750,11 @@ public class FreddyAI : EnemyAI
         //FREDDY Stage local handler
         private void localPlayerFreddyHandler()
         {
-            if (playerSleep[indexSleepArraySleep].SleepMeter ==235)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter ==235)
             {
-                oneShotCreature.PlayOneShot(EnterTheDream);
+                oneShotCreature.PlayOneShot(enterTheDream);
             }
-            if (playerSleep[indexSleepArraySleep].SleepMeter >= 260)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= 260)
             {
                 EnemyMeshAndPerson(true);
             }
@@ -768,11 +764,11 @@ public class FreddyAI : EnemyAI
                 oneShotCreature.Stop();
             }
 
-            if (playerSleep[indexSleepArraySleep].SleepMeter == 320)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter == 320)
             {
-                oneShotCreature.PlayOneShot(Terminus);
+                oneShotCreature.PlayOneShot(terminus);
             }
-            else if (playerSleep[indexSleepArraySleep].SleepMeter < 320)
+            else if (_playerSleep[_indexSleepArraySleep].SleepMeter < 320)
             {
                 oneShotCreature.Stop();
             }
@@ -792,6 +788,21 @@ public class FreddyAI : EnemyAI
                 creatureSFX.volume = 0;
             }
         }
+        //Kill Handler :
+        public override void OnCollideWithPlayer(Collider other)
+        {
+            base.OnCollideWithPlayer(other);
+            PlayerControllerB playerControllerB = this.MeetsStandardPlayerCollisionConditions(other);
+            //Stop if there is no player controller B
+            if (!((UnityEngine.Object) playerControllerB != (UnityEngine.Object) null))
+                return;
+            
+        }
+        
+        
+        
+        
+        
         //______________________________________________________//
         
         
@@ -803,14 +814,14 @@ public class FreddyAI : EnemyAI
     {
         Debug.Log("ClientSide "+x[0].SleepMeter);
         //Reload Index If death of player
-        if (playerSleep!=null)
+        if (_playerSleep!=null)
         {
-            if (playerSleep.Count!=x.Count)
+            if (_playerSleep.Count!=x.Count)
             {
-                indexSleepArraySleep = -1;
+                _indexSleepArraySleep = -1;
             }
         }
-        playerSleep = x;
+        _playerSleep = x;
         SetTargetPlayer();
         localPlayerFreddyHandler();
     }
@@ -818,7 +829,7 @@ public class FreddyAI : EnemyAI
     private void SetClientBehavior(int x)
     {
         currentBehaviourStateIndex = x;
-        justSwitchedBehaviour = true;
+        _justSwitchedBehaviour = true;
     }
     
     /*
