@@ -632,7 +632,7 @@ public class FreddyAI : EnemyAI
                     }
                     turnCompass.LookAt(TargetPlayer.gameplayCamera.transform.position);
 
-                    // If a valid path is found, set Krueger's destination to the player's position
+                    // If a valid path is found, set destination to the player's position
                     //agent.SetDestination(targetPlayer.transform.position);
                     SwitchToBehaviourState(0);
                     return true;
@@ -820,4 +820,137 @@ public class FreddyAI : EnemyAI
         currentBehaviourStateIndex = x;
         justSwitchedBehaviour = true;
     }
+    
+    /*
+    private float transitionDuration = 5f; // Transition duration in seconds
+    private float startTime;
+    private bool transitioning = false;
+
+    private Color[] originalColors; // Store original colors for each material
+    
+    //
+    // private void Start()
+    // {
+    //     startTime = Time.time;
+    //     CacheOriginalColors();
+    // }
+    //
+    // private void Update()
+    // {
+    //     if (transitioning)
+    //     {
+    //         float t = Mathf.Clamp01((Time.time - startTime) / transitionDuration);
+    //        ApplyDesaturation(t);
+    //     }
+    // }
+
+    public void StartTransition()
+    {
+        transitioning = true;
+    }
+
+    private void CacheOriginalColors()
+    {
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        originalColors = new Color[renderers.Length];
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            originalColors[i] = renderers[i].material.color;
+        }
+    }
+
+    private void ApplyDesaturation(float t)
+    {
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Material material = renderers[i].material;
+            Color originalColor = originalColors[i];
+
+            float grayscaleValue = 0.299f * originalColor.r + 0.587f * originalColor.g + 0.114f * originalColor.b;
+            Color grayscaleColor = new Color(grayscaleValue, grayscaleValue, grayscaleValue, originalColor.a);
+
+            material.color = Color.Lerp(originalColor, grayscaleColor, t);
+        }
+    }
+/*
+ * using UnityEngine;
+
+public class ColorToBWTransition : MonoBehaviour
+{
+    public float transitionDuration = 5f; // Transition duration in seconds
+    private float startTime;
+    private bool transitioning = false;
+    private bool isBlackAndWhite = false; // Current mode
+
+    private Color[] originalColors; // Store original colors for each material
+
+    private void Start()
+    {
+        startTime = Time.time;
+        CacheOriginalColors();
+    }
+
+    private void Update()
+    {
+        if (transitioning)
+        {
+            float t = Mathf.Clamp01((Time.time - startTime) / transitionDuration);
+            ApplyDesaturation(t);
+        }
+    }
+
+    public void StartTransition()
+    {
+        transitioning = true;
+        isBlackAndWhite = !isBlackAndWhite; // Toggle mode
+    }
+
+    public void SwitchToOriginalColors()
+    {
+        transitioning = false;
+        isBlackAndWhite = false; // Switch back to color mode
+        RestoreOriginalColors();
+    }
+
+    private void CacheOriginalColors()
+    {
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        originalColors = new Color[renderers.Length];
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            originalColors[i] = renderers[i].material.color;
+        }
+    }
+
+    private void ApplyDesaturation(float t)
+    {
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Material material = renderers[i].material;
+            Color originalColor = originalColors[i];
+
+            float grayscaleValue = 0.299f * originalColor.r + 0.587f * originalColor.g + 0.114f * originalColor.b;
+            Color grayscaleColor = new Color(grayscaleValue, grayscaleValue, grayscaleValue, originalColor.a);
+
+            Color targetColor = isBlackAndWhite ? grayscaleColor : originalColor;
+            material.color = Color.Lerp(material.color, targetColor, t);
+        }
+    }
+
+    private void RestoreOriginalColors()
+    {
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Material material = renderers[i].material;
+            material.color = originalColors[i];
+        }
+    }
+}
+
+ */
 }
