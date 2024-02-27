@@ -764,21 +764,25 @@ public class FreddyAI : EnemyAI
         {
             if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
             {
-                enterTheDream.LoadAudioData();
+                //Currently FOrce Loaded
+                //enterTheDream.LoadAudioData();
             }
             if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
             {
-                oneShotCreature.PlayOneShot(enterTheDream);
+                creatureSFX.PlayOneShot(enterTheDream);
+                //Currently Force Loaded
+                //terminus.LoadAudioData();
             }
             if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
             {
                 EnemyMeshAndPerson(true);
-                terminus.LoadAudioData();
+                creatureSFX.Play();
             }
             else
             {
                 EnemyMeshAndPerson(false);
-                oneShotCreature.Stop();
+                creatureSFX.Stop();
+                
             }
 
             if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
@@ -797,12 +801,10 @@ public class FreddyAI : EnemyAI
             if (enable)
             {
                 creatureVoice.volume = 100;
-                creatureSFX.volume = 100;
             }
             else
             {
                 creatureVoice.volume = 0;
-                creatureSFX.volume = 0;
             }
         }
         //Kill Handler :
