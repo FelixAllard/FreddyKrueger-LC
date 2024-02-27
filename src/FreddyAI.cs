@@ -113,6 +113,14 @@ public class FreddyAI : EnemyAI
     //RunningClaw Verifications;
     private bool _wasInsideFactory;
     private bool _triggerTeleportDoor;
+    
+    
+    
+    
+    //TRESHOLDS FOR QUICK SWITCHING
+    private int _enterSleep;
+    private int _maxSleep;
+
 
     enum State {
         Spawning,
@@ -124,6 +132,8 @@ public class FreddyAI : EnemyAI
     public override void Start()
     {
         base.Start();
+        _enterSleep = 50;
+        _maxSleep = 150;
         EnemyMeshAndPerson(false);
         if (IsServer)
         {
@@ -161,6 +171,8 @@ public class FreddyAI : EnemyAI
     }
     
     [NonSerialized] private double _timer =0;
+    
+    
     public override void Update()
     {
         base.Update();
@@ -404,7 +416,7 @@ public class FreddyAI : EnemyAI
         //FInd which Player has a score over 260!!!
         for (int count = 0; count < _playerSleepServ.Count; count++)
         {
-            if (_playerSleepServ[count].SleepMeter >= 260) //SLEEP METER TRESHOLD --- IMPORTANT
+            if (_playerSleepServ[count].SleepMeter >= _enterSleep) //SLEEP METER TRESHOLD --- IMPORTANT
             {
                 possibleTarget.Add(_playerSleepServ[count]);
             }
@@ -513,12 +525,12 @@ public class FreddyAI : EnemyAI
         if (_targetPlayer != null)
         {
             bool updateToClient = false;
-            if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >=260 && _playerSleepServ[_indexSleepArraySleep].SleepMeter <400)
+            if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >=_enterSleep && _playerSleepServ[_indexSleepArraySleep].SleepMeter <_maxSleep)
             {
                 //WALKING
                 _behaviourIndexServer = 1;
                 
-                if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(300,450))
+                if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
                 {
                     if (currentBehaviourStateIndex != 2)
                     {
@@ -527,7 +539,7 @@ public class FreddyAI : EnemyAI
                     }
                     //RUNNING
                 }
-                else if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32(350, 450))
+                else if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
                 {
                     //Sneaking
                     if (currentBehaviourStateIndex != 4)
@@ -538,7 +550,7 @@ public class FreddyAI : EnemyAI
                 }
                
             }
-            else if(_playerSleepServ[_indexSleepArraySleep].SleepMeter >=400)
+            else if(_playerSleepServ[_indexSleepArraySleep].SleepMeter >=_maxSleep)
             {
                 //KILL time
                 _behaviourIndexServer = 3;
@@ -748,15 +760,20 @@ public class FreddyAI : EnemyAI
         }
         //-------------------------------------------------------------
         //FREDDY Stage local handler
-        private void localPlayerFreddyHandler()
+        private void LocalPlayerFreddyHandler()
         {
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter ==235)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
+            {
+                enterTheDream.LoadAudioData();
+            }
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
             {
                 oneShotCreature.PlayOneShot(enterTheDream);
             }
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= 260)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
             {
                 EnemyMeshAndPerson(true);
+                terminus.LoadAudioData();
             }
             else
             {
@@ -764,20 +781,20 @@ public class FreddyAI : EnemyAI
                 oneShotCreature.Stop();
             }
 
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter == 320)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
             {
                 oneShotCreature.PlayOneShot(terminus);
             }
-            else if (_playerSleep[_indexSleepArraySleep].SleepMeter < 320)
+            else if (_playerSleep[_indexSleepArraySleep].SleepMeter < _maxSleep-80)
             {
                 oneShotCreature.Stop();
             }
         }
 
-        public void EnemyMeshAndPerson(bool Enable)
+        public void EnemyMeshAndPerson(bool enable)
         {
-            this.EnableEnemyMesh(Enable, false);
-            if (Enable)
+            this.EnableEnemyMesh(enable, false);
+            if (enable)
             {
                 creatureVoice.volume = 100;
                 creatureSFX.volume = 100;
@@ -823,7 +840,7 @@ public class FreddyAI : EnemyAI
         }
         _playerSleep = x;
         SetTargetPlayer();
-        localPlayerFreddyHandler();
+        LocalPlayerFreddyHandler();
     }
 
     private void SetClientBehavior(int x)
