@@ -171,8 +171,9 @@ public class FreddyAI : EnemyAI
     }
     
     [NonSerialized] private double _timer =0;
-    
-    
+    private bool _setFirstBehaviour = false;
+
+
     public override void Update()
     {
         base.Update();
@@ -229,7 +230,7 @@ public class FreddyAI : EnemyAI
                 {
                     TeleportRandomlyAroundPlayer(20, 30);
                 }
-                StartCoroutine(teleportCooldown());
+                StartCoroutine(TeleportCooldown());
                 break;
             case (int)State.Running:
                 if (_justSwitchedBehaviour)
@@ -241,7 +242,7 @@ public class FreddyAI : EnemyAI
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
                 }
-                StartCoroutine(teleportCooldown());
+                StartCoroutine(TeleportCooldown());
                 break;
             case (int)State.RunningClaw:
                 if (_justSwitchedBehaviour)
@@ -300,7 +301,7 @@ public class FreddyAI : EnemyAI
     }
     //IENUMERATOR
     //-----------------------------------------------------------------------------------------------------------------------
-    IEnumerator teleportCooldown()
+    IEnumerator TeleportCooldown()
     {
         
         
@@ -500,6 +501,13 @@ public class FreddyAI : EnemyAI
             if (player.ClientID == highestSleepPoints.ClientID)
             {
                 player.IsTargetPlayer = true;
+                
+                if (!_setFirstBehaviour)
+                {
+                    _setFirstBehaviour = true;
+                    SetBehavior();
+
+                }
             }
             else
             {
@@ -705,7 +713,7 @@ public class FreddyAI : EnemyAI
     
     //Break Door On touch
     //---------------------------------------------------
-    [ServerRpc]
+        [ServerRpc]
         public void BreakDoorServerRpc()
         {
             foreach (DoorLock Door in FindObjectsOfType(typeof(DoorLock)) as DoorLock[])
@@ -776,7 +784,11 @@ public class FreddyAI : EnemyAI
             if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
             {
                 EnemyMeshAndPerson(true);
-                creatureSFX.Play();
+                if (!creatureSFX.isPlaying)
+                {
+                    creatureSFX.Play();
+                }
+                
             }
             else
             {
