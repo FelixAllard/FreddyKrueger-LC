@@ -194,7 +194,7 @@ public class FreddyAI : EnemyAI
         
         if (_targetPlayer != null)
         {
-            SetDestinationToPosition(_targetPlayer.transform.position);
+            SetMovingTowardsTargetPlayer(_targetPlayer);
             if (_targetPlayer.isInsideFactory != _wasInsideFactory)
             {
                 _triggerTeleportDoor = true;
@@ -596,6 +596,7 @@ public class FreddyAI : EnemyAI
             {
                 Debug.Log("Set behavior state :  " + _behaviourIndexServer + "   Index");
                 SwitchToBehaviourState(_behaviourIndexServer);
+                _justSwitchedBehaviour = true;
             }
         }
     }
@@ -894,7 +895,6 @@ public class FreddyAI : EnemyAI
         _playerSleep = x;
         SetTargetPlayer();
         LocalPlayerFreddyHandler();
-        SetBehavior();
     }
 
     private void SetClientBehavior(int x)
