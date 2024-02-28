@@ -95,10 +95,6 @@ public class FreddyAI : EnemyAI
     
     private LethalClientMessage<List<PlayerSleep>> _clientReceiveSleepArray;
     
-    //Post Mail behavior Int
-    private LethalServerMessage<int> _serverMessageBehavior;
-    
-    private LethalClientMessage<int> _clientReceiveBehavior;
     //Fast info
     private ulong _clientID;
     private ulong _lastSleepMeter;
@@ -159,14 +155,11 @@ public class FreddyAI : EnemyAI
         _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "customIdentifier");
         _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: "customIdentifier", onReceived: ActualiseClientSleep);
         //Mesage service int 8
-        _serverMessageBehavior = new LethalServerMessage<int>(identifier: "customIdentifier");
-        _clientReceiveBehavior = new LethalClientMessage<int>(identifier: "customIdentifier", onReceived: SetClientBehavior);
+
         
         //ClientReceiveSleepAray.OnReceived += ActualiseClientSleepServer; Useless Server Receive Logic
         _clientReceiveSleepArray.OnReceived += ActualiseClientSleep;
         //Behavior SEND Int
-        _clientReceiveBehavior.OnReceived += SetClientBehavior;
-
         _clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
     }
     
@@ -504,6 +497,7 @@ public class FreddyAI : EnemyAI
                 
                 if (!_setFirstBehaviour)
                 {
+                    Debug.Log("Setting first behaviour!");
                     _setFirstBehaviour = true;
                     SetBehavior();
 
@@ -515,23 +509,12 @@ public class FreddyAI : EnemyAI
             }
         }
     }
-    /*
-     *STATE IDEA
-     * SLEEP LULLABY 240
-     *
-     * 260-400 WALKING
-     * 300-400
-     * sneaking 350-400
-     * KILL CLAW : 400+
-     * 
-     *
-     * 
-     */
-    
     public void SetBehavior()
     {
+        Debug.Log("INITIALISING SLEEP");
         if (_targetPlayer != null)
         {
+            Debug.Log("FOUND TARGET PLAYER");
             bool updateToClient = false;
             if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >=_enterSleep && _playerSleepServ[_indexSleepArraySleep].SleepMeter <_maxSleep)
             {
@@ -566,7 +549,8 @@ public class FreddyAI : EnemyAI
             //If The state is different, it sends to clients
             if (updateToClient)
             {
-                _serverMessageBehavior.SendAllClients(_behaviourIndexServer,true);
+                Debug.Log("Set behavior state :  " + _behaviourIndexServer + "   Index");
+                SwitchToBehaviourState(_behaviourIndexServer);
             }
         }
     }
