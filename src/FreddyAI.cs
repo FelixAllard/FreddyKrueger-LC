@@ -408,16 +408,17 @@ public class FreddyAI : EnemyAI
     {
         List<PlayerSleep> possibleTarget = new List<PlayerSleep>();
         //FInd which Player has a score over sleep treshold !!!
-        for (int count = 0; count < _playerSleepServ.Count; count++)
+        foreach (var t in _playerSleepServ)
         {
-            if (_playerSleepServ[count].SleepMeter >= _enterSleep && _playerSleepServ[count].ClientID.GetPlayerController().isPlayerControlled ) //SLEEP METER TRESHOLD --- IMPORTANT
+            if (t.SleepMeter >= _enterSleep && t.ClientID.GetPlayerController().isPlayerControlled ) //SLEEP METER TRESHOLD --- IMPORTANT
             {
-                possibleTarget.Add(_playerSleepServ[count]);
+                possibleTarget.Add(t);
             }
         }
         //Sort from highest ot lowest
         possibleTarget.Sort((a, b) => b.SleepMeter.CompareTo(a.SleepMeter));
         PlayerSleep highestSleepPoints = new PlayerSleep();
+        highestSleepPoints.TargetPoint = -100;
 
         for (int count = 0; count < possibleTarget.Count; count++)
         {
@@ -818,6 +819,7 @@ public class FreddyAI : EnemyAI
         
     
     //MESSAGE HANDLER LOGIC
+    //TODO Stop it from running 2 times for ntg
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
         Debug.Log("ClientSide "+x[0].SleepMeter);
