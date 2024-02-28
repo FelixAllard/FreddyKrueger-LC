@@ -132,6 +132,7 @@ public class FreddyAI : EnemyAI
         base.Start();
         _enterSleep = 50;
         _maxSleep = 150;
+        _inCoroutine = false;
         if (IsServer)
         {
             _playerSleepServ = new List<PlayerSleep>();
@@ -168,6 +169,7 @@ public class FreddyAI : EnemyAI
     
     [NonSerialized] private double _timer =0;
     private bool _setFirstBehaviour = false;
+    private bool _inCoroutine;
 
 
     public override void Update()
@@ -202,16 +204,21 @@ public class FreddyAI : EnemyAI
 
         
         switch(currentBehaviourStateIndex) {
-            // case (int)State.Spawning:
-            //     if (justSwitchedBehaviour)
-            //     {
-            //         IdleFreddy();
-            //         agent.speed = 0f;
-            //         justSwitchedBehaviour = false;
-            //     }
-            //     EnableEnemyMesh(true);
-            //     
-            //     break;
+            case (int)State.Spawning:
+                if (_justSwitchedBehaviour)
+                {
+                    IdleFreddy();
+                    agent.speed = 0f;
+                    _justSwitchedBehaviour = false;
+                }
+                EnableEnemyMesh(true);
+                if (!_inCoroutine)
+                {
+                    StartCoroutine(Spawning());
+                    _inCoroutine = true;
+                }
+                     
+                break;
             case (int)State.Walking:
                 if (_justSwitchedBehaviour)
                 {
@@ -226,7 +233,12 @@ public class FreddyAI : EnemyAI
                 {
                     TeleportRandomlyAroundPlayer(20, 30);
                 }
-                StartCoroutine(TeleportCooldown());
+                if (!_inCoroutine)
+                {
+                    StartCoroutine(TeleportCooldown());
+                    _inCoroutine = true;
+                }
+                
                 break;
             case (int)State.Running:
                 if (_justSwitchedBehaviour)
@@ -242,7 +254,11 @@ public class FreddyAI : EnemyAI
                 {
                     TeleportRandomlyAroundPlayer(20, 30);
                 }
-                StartCoroutine(TeleportCooldown());
+                if (!_inCoroutine)
+                {
+                    StartCoroutine(TeleportCooldown());
+                    _inCoroutine = true;
+                }
                 break;
             case (int)State.RunningClaw:
                 if (_justSwitchedBehaviour)
@@ -276,21 +292,22 @@ public class FreddyAI : EnemyAI
                     
                     
                 }
-                Bounds bounds = GetComponent<Renderer>().bounds;
 
-                // Calculate the screen position of the object's center
-                //IDK IF IT IS THE RIGHT CAMERA
-                Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(bounds.center);
+                Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(transform.position);
 
                 // Check if the object is within the camera's view
                 bool isVisible = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
                 if (isVisible)
                 {
                     IdleFreddy();
-                    creatureAnimator.SetTrigger("Suprised");
                     RandomLaugh();
                     agent.speed = 0f;
-                    StartCoroutine(WaitAndChangeBehavior(3f));
+                    if (!_inCoroutine)
+                    {
+                        creatureAnimator.SetTrigger("Suprised");
+                        StartCoroutine(WaitAndChangeBehavior(3f));
+                        _inCoroutine = true;
+                    }
                 }
                 
                 break;
@@ -301,6 +318,18 @@ public class FreddyAI : EnemyAI
     }
     //IENUMERATOR
     //-----------------------------------------------------------------------------------------------------------------------
+    
+    IEnumerator Spawning()
+    {
+        creatureAnimator.SetTrigger("JumpingDown");
+        RandomLaugh();
+        yield return new WaitForSeconds(3);
+        if (IsHost)
+        {
+            SetBehavior();
+        }
+        _inCoroutine = false;
+    }
     IEnumerator TeleportCooldown()
     {
         
@@ -313,6 +342,7 @@ public class FreddyAI : EnemyAI
         {
             SetBehavior();
         }
+        _inCoroutine = false;
     }
     IEnumerator WaitAndChangeBehavior(float x)
     {
@@ -325,6 +355,8 @@ public class FreddyAI : EnemyAI
         {
             Debug.Log("Awaiting Host Behavior");
         }
+
+        _inCoroutine = false;
     }
     //SERVER LOGIC
     //-----------------------------------------------------------------------------------------------------------------------START SERVER
@@ -812,6 +844,7 @@ public class FreddyAI : EnemyAI
                 creatureVoice.volume = 0;
             }
         }
+        
         //Kill Handler :
         public override void OnCollideWithPlayer(Collider other)
         {
@@ -820,6 +853,18 @@ public class FreddyAI : EnemyAI
             //Stop if there is no player controller B
             if (!((UnityEngine.Object) playerControllerB != (UnityEngine.Object) null))
                 return;
+            foreach (var player in _playerSleep)
+            {
+                if (playerControllerB.GetClientId() == player.ClientID && playerControllerB.isPlayerControlled)
+                {
+                    if (player.SleepMeter>=_enterSleep)
+                    {
+                        playerControllerB.KillPlayer(Vector3.zero,true, CauseOfDeath.Unknown, 1);
+                        
+                    }
+                }
+            }
+            
             //TODO Implement kill behaviour
         }
         
