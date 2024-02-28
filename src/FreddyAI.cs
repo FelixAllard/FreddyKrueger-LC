@@ -157,7 +157,9 @@ public class FreddyAI : EnemyAI
 
         
         //ClientReceiveSleepAray.OnReceived += ActualiseClientSleepServer; Useless Server Receive Logic
-        _clientReceiveSleepArray.OnReceived += ActualiseClientSleep;
+        
+        
+        //_clientReceiveSleepArray.OnReceived += ActualiseClientSleep; ADD SECOND METHOD TO CALLING
         //Behavior SEND Int
         _clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
     }
@@ -419,6 +421,7 @@ public class FreddyAI : EnemyAI
         possibleTarget.Sort((a, b) => b.SleepMeter.CompareTo(a.SleepMeter));
         PlayerSleep highestSleepPoints = new PlayerSleep();
         highestSleepPoints.TargetPoint = -100;
+        highestSleepPoints.ClientID = 9999999999;
 
         for (int count = 0; count < possibleTarget.Count; count++)
         {
@@ -491,8 +494,8 @@ public class FreddyAI : EnemyAI
         }
         //Target player Becomes true for the target player and false for the rest
         foreach (var player in _playerSleepServ)
-        {
-            if (player.ClientID == highestSleepPoints.ClientID)
+        { 
+            if (player.ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
             {
                 player.IsTargetPlayer = true;
                 
@@ -587,13 +590,15 @@ public class FreddyAI : EnemyAI
             //CONDITION = Player is target plauer
             if(player.IsTargetPlayer)
             {
+                Debug.Log("We Now have a _targetPlayer !");
                 _targetPlayer = player.ClientID.GetPlayerController();
                 isThereTarget = true;
             }
             count++;
         }
-        if (isThereTarget)
+        if (!isThereTarget)
         {
+            Debug.Log("NO TARGET PLAYER");
             _targetPlayer = null;
         }
     }
