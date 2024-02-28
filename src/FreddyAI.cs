@@ -130,7 +130,6 @@ public class FreddyAI : EnemyAI
         base.Start();
         _enterSleep = 50;
         _maxSleep = 150;
-        EnemyMeshAndPerson(false);
         if (IsServer)
         {
             _playerSleepServ = new List<PlayerSleep>();
@@ -234,6 +233,10 @@ public class FreddyAI : EnemyAI
                     creatureAnimator.SetBool("Running", true);
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
+                }
+                if (!SetDestinationToPosition(_targetPlayer.transform.position, true) && _targetPlayer != null)
+                {
+                    TeleportRandomlyAroundPlayer(20, 30);
                 }
                 StartCoroutine(TeleportCooldown());
                 break;
@@ -359,7 +362,6 @@ public class FreddyAI : EnemyAI
                     }
                 }
             }
-            
         }
         //IF not running with claw
         if(_behaviourIndexServer != 3)
@@ -369,8 +371,6 @@ public class FreddyAI : EnemyAI
                 ChooseTarget();
             }
         }
-        Debug.Log("SERVER SIDE" + _playerSleepServ[0].SleepMeter);
-        
         //Sending computation to all clients
         _serverMessageSleepArray.SendAllClients(_playerSleepServ);
     }
@@ -396,7 +396,7 @@ public class FreddyAI : EnemyAI
             }
             else
             {
-                Debug.Log("Same Player Reference");
+                //Handle if same player or to far
             }
         }
         // If no other player is found within 10 units, check if the distance is greater than 20
@@ -407,10 +407,10 @@ public class FreddyAI : EnemyAI
     public void ChooseTarget()
     {
         List<PlayerSleep> possibleTarget = new List<PlayerSleep>();
-        //FInd which Player has a score over 260!!!
+        //FInd which Player has a score over sleep treshold !!!
         for (int count = 0; count < _playerSleepServ.Count; count++)
         {
-            if (_playerSleepServ[count].SleepMeter >= _enterSleep) //SLEEP METER TRESHOLD --- IMPORTANT
+            if (_playerSleepServ[count].SleepMeter >= _enterSleep && _playerSleepServ[count].ClientID.GetPlayerController().isPlayerControlled ) //SLEEP METER TRESHOLD --- IMPORTANT
             {
                 possibleTarget.Add(_playerSleepServ[count]);
             }
@@ -774,16 +774,9 @@ public class FreddyAI : EnemyAI
                 }
                 
             }
-            else
-            {
-                EnemyMeshAndPerson(false);
-                creatureSFX.Stop();
-                
-            }
-
             if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
             {
-                oneShotCreature.PlayOneShot(terminus);
+                creatureSFX.PlayOneShot(terminus);
             }
             else if (_playerSleep[_indexSleepArraySleep].SleepMeter < _maxSleep-80)
             {
@@ -811,7 +804,7 @@ public class FreddyAI : EnemyAI
             //Stop if there is no player controller B
             if (!((UnityEngine.Object) playerControllerB != (UnityEngine.Object) null))
                 return;
-            
+            //TODO Implement kill behaviour
         }
         
         
@@ -839,6 +832,7 @@ public class FreddyAI : EnemyAI
         _playerSleep = x;
         SetTargetPlayer();
         LocalPlayerFreddyHandler();
+        SetBehavior();
     }
 
     private void SetClientBehavior(int x)
