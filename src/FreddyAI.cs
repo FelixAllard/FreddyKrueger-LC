@@ -104,6 +104,8 @@ public class FreddyAI : EnemyAI
     
     
     private PlayerControllerB _targetPlayer;
+    private PlayerSleep _targetPlayerSleep;
+    
     private int _behaviourIndexServer;
     private bool _justSwitchedBehaviour;
     //RunningClaw Verifications;
@@ -515,17 +517,14 @@ public class FreddyAI : EnemyAI
     }
     public void SetBehavior()
     {
-        Debug.Log("INITIALISING SLEEP");
+        //TODO Add behavior to Unity Project
         if (_targetPlayer != null)
         {
-            Debug.Log("FOUND TARGET PLAYER");
             bool updateToClient = false;
-            if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >=_enterSleep && _playerSleepServ[_indexSleepArraySleep].SleepMeter <_maxSleep)
+            if (_targetPlayerSleep.SleepMeter >=_enterSleep && _targetPlayerSleep.SleepMeter <_maxSleep)
             {
-                //WALKING
-                _behaviourIndexServer = 1;
                 
-                if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
+                if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
                 {
                     if (currentBehaviourStateIndex != 2)
                     {
@@ -534,7 +533,7 @@ public class FreddyAI : EnemyAI
                     }
                     //RUNNING
                 }
-                else if (_playerSleepServ[_indexSleepArraySleep].SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
+                else if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
                 {
                     //Sneaking
                     if (currentBehaviourStateIndex != 4)
@@ -543,12 +542,22 @@ public class FreddyAI : EnemyAI
                         updateToClient = true;
                     }
                 }
+                else
+                {
+                    if (currentBehaviourStateIndex != 4)
+                    {
+                        //WALKING
+                        _behaviourIndexServer = 1;
+                        updateToClient = true;
+                    } 
+                }
                
             }
-            else if(_playerSleepServ[_indexSleepArraySleep].SleepMeter >=_maxSleep)
+            else if(_targetPlayerSleep.SleepMeter >=_maxSleep)
             {
                 //KILL time
                 _behaviourIndexServer = 3;
+                updateToClient = true;
             }
             //If The state is different, it sends to clients
             if (updateToClient)
@@ -592,6 +601,7 @@ public class FreddyAI : EnemyAI
             {
                 Debug.Log("We Now have a _targetPlayer !");
                 _targetPlayer = player.ClientID.GetPlayerController();
+                _targetPlayerSleep = player;
                 isThereTarget = true;
             }
             count++;
