@@ -109,8 +109,6 @@ public class FreddyAI : EnemyAI
     private int _behaviourIndexServer;
     private bool _justSwitchedBehaviour;
     //RunningClaw Verifications;
-    private bool _wasInsideFactory;
-    private bool _triggerTeleportDoor;
     
     
     
@@ -194,25 +192,31 @@ public class FreddyAI : EnemyAI
         
         if (_targetPlayer != null)
         {
-            SetMovingTowardsTargetPlayer(_targetPlayer);
+            SetDestinationToPosition(_targetPlayer.transform.position, true);
         }
 
         
         switch(currentBehaviourStateIndex) {
             case (int)State.Spawning:
-                if (_justSwitchedBehaviour)
+                if (_targetPlayer)
                 {
-                    IdleFreddy();
-                    agent.speed = 0f;
-                    _justSwitchedBehaviour = false;
+                    if (_justSwitchedBehaviour)
+                    {
+                        IdleFreddy();
+                        agent.speed = 0f;
+                        _justSwitchedBehaviour = false;
+                    }
+                    if (!_inCoroutine)
+                    {
+                        creatureAnimator.SetTrigger("Teleport");
+                        StartCoroutine(Spawning());
+                        //MAKE SURE THERE IS NO CHANGE IN THE MILISECOND
+                        if (_inCoroutine = false)
+                        {
+                            _inCoroutine = true;
+                        }
+                    }
                 }
-                EnableEnemyMesh(true);
-                if (!_inCoroutine)
-                {
-                    StartCoroutine(Spawning());
-                    _inCoroutine = true;
-                }
-                     
                 break;
             case (int)State.Walking:
                 if (_justSwitchedBehaviour)
@@ -224,10 +228,8 @@ public class FreddyAI : EnemyAI
                     _justSwitchedBehaviour = false;
                     
                 }
-                if (!SetDestinationToPosition(_targetPlayer.transform.position, true) && _targetPlayer != null)
-                {
-                    TeleportRandomlyAroundPlayer(20, 30);
-                }
+                if (!CanReach(transform.position, _targetPlayer.transform.position) && _targetPlayer != null)
+                    ChangeBehaviour();
                 if (!_inCoroutine)
                 {
                     StartCoroutine(TeleportCooldown());
@@ -296,6 +298,7 @@ public class FreddyAI : EnemyAI
                     agent.speed = 0f;
                     if (!_inCoroutine)
                     {
+                        RandomLaugh();
                         creatureAnimator.SetTrigger("Suprised");
                         StartCoroutine(WaitAndChangeBehavior(3f));
                         _inCoroutine = true;
@@ -309,28 +312,32 @@ public class FreddyAI : EnemyAI
     }
     //IENUMERATOR
     //-----------------------------------------------------------------------------------------------------------------------
-    
-    IEnumerator Spawning()
+    public void ChangeBehaviour()
     {
-        creatureAnimator.SetTrigger("JumpingDown");
         RandomLaugh();
-        yield return new WaitForSeconds(3);
+        //Switch to spawning
+        _justSwitchedBehaviour = true;
+        SwitchToBehaviourState(0);
         if (IsHost)
         {
             SetBehavior();
         }
+        
+    }
+    IEnumerator Spawning()
+    {
+        creatureAnimator.SetTrigger("Teleport");
+        yield return new WaitForSeconds(1f);
+        ChangeBehaviour();
+        
+
+        _justSwitchedBehaviour = true;
         _inCoroutine = false;
     }
     IEnumerator TeleportCooldown()
     {
         yield return new WaitForSeconds(12);
-        creatureAnimator.SetTrigger("Teleport");
-        RandomLaugh();
-        yield return new WaitForSeconds(3);
-        if (IsHost)
-        {
-            SetBehavior();
-        }
+
         _inCoroutine = false;
     }
     IEnumerator WaitAndChangeBehavior(float x)
@@ -338,7 +345,8 @@ public class FreddyAI : EnemyAI
         yield return new WaitForSeconds(x);
         if (IsHost)
         {
-            SetBehavior();
+            _justSwitchedBehaviour = true;
+            ChangeBehaviour();
         }
         else
         {
@@ -585,7 +593,6 @@ public class FreddyAI : EnemyAI
             {
                 Debug.Log("Set behavior state :  " + _behaviourIndexServer + "   Index");
                 SwitchToBehaviourState(_behaviourIndexServer);
-                _justSwitchedBehaviour = true;
             }
         }
     }
@@ -907,12 +914,6 @@ public class FreddyAI : EnemyAI
         _playerSleep = x;
         SetTargetPlayer();
         LocalPlayerFreddyHandler();
-    }
-
-    private void SetClientBehavior(int x)
-    {
-        currentBehaviourStateIndex = x;
-        _justSwitchedBehaviour = true;
     }
     
     /*
