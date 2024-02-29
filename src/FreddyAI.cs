@@ -873,11 +873,15 @@ public class FreddyAI : EnemyAI
             }
             //TODO Implement kill behaviour
         }
-        
-        
-        
-        
-        
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            _playerSleep = null;
+
+        }
+
+
         //______________________________________________________//
         
         
