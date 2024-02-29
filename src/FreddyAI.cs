@@ -131,6 +131,8 @@ public class FreddyAI : EnemyAI
         _enterSleep = 50;
         _maxSleep = 150;
         _inCoroutine = false;
+        StartCoroutine(SeeIfAccessible());
+        
         if (IsServer)
         {
             _playerSleepServ = new List<PlayerSleep>();
@@ -194,45 +196,44 @@ public class FreddyAI : EnemyAI
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
         }
-
+       
         
         switch(currentBehaviourStateIndex) {
             case (int)State.Spawning:
                 if (_targetPlayer)
                 {
-                    if (_justSwitchedBehaviour)
+                    agent.acceleration = 0;
+                    IdleFreddy();
+
+                    _justSwitchedBehaviour = false;
+                    creatureAnimator.SetTrigger("Teleport");
+                    
+                    if (IsHost)
                     {
-                        IdleFreddy();
-                        agent.speed = 0f;
-                        _justSwitchedBehaviour = false;
+                        SetBehavior();
                     }
-                    if (!_inCoroutine)
-                    {
-                        creatureAnimator.SetTrigger("Teleport");
-                        StartCoroutine(Spawning());
-                        //MAKE SURE THERE IS NO CHANGE IN THE MILISECOND
-                        if (_inCoroutine = false)
-                        {
-                            _inCoroutine = true;
-                        }
-                    }
+                    
+                    _justSwitchedBehaviour = true;
+                    StopCoroutine(WaitAndChangeBehavior(5f));
+
                 }
                 break;
             case (int)State.Walking:
                 if (_justSwitchedBehaviour)
                 {
-                    TeleportRandomlyAroundPlayer(10, 20);
+                    agent.acceleration = 8;
+                    TeleportRandomlyAroundPlayer(10, 15);
                     IdleFreddy();
                     creatureAnimator.SetBool("Walking",true);
                     agent.speed = 3f;
                     _justSwitchedBehaviour = false;
+                    StartCoroutine(WaitAndChangeBehavior(15f)); 
+                   
                     
                 }
-                if (!CanReach(transform.position, _targetPlayer.transform.position) && _targetPlayer != null)
-                    ChangeBehaviour();
                 if (!_inCoroutine)
                 {
-                    StartCoroutine(TeleportCooldown());
+                    
                     _inCoroutine = true;
                 }
                 
@@ -240,6 +241,7 @@ public class FreddyAI : EnemyAI
             case (int)State.Running:
                 if (_justSwitchedBehaviour)
                 {
+                    agent.acceleration = 8;
                     
                     TeleportRandomlyAroundPlayer(20, 30);
                     IdleFreddy();
@@ -247,30 +249,27 @@ public class FreddyAI : EnemyAI
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
                 }
-                if (!SetDestinationToPosition(_targetPlayer.transform.position, true) && _targetPlayer != null)
-                {
-                    TeleportRandomlyAroundPlayer(20, 30);
-                }
                 if (!_inCoroutine)
                 {
-                    StartCoroutine(TeleportCooldown());
+                    StartCoroutine(WaitAndChangeBehavior(12f));
                     _inCoroutine = true;
                 }
                 break;
             case (int)State.RunningClaw:
                 if (_justSwitchedBehaviour)
                 {
-                    TeleportRandomlyAroundPlayer(40, 70);
+
+                    float _minTeleport = (40-(_targetPlayerSleep.SleepMeter-_maxSleep));
+                    float _maxTeleport = ((40 - (_targetPlayerSleep.SleepMeter - _maxSleep)) / 2) * 3;
+                    TeleportRandomlyAroundPlayer((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                     IdleFreddy();
                     creatureAnimator.SetBool("RunWithClaw", true);
-                    agent.speed = 6f;
+                    agent.speed = 6;
                     
                     _justSwitchedBehaviour = false;
                 }
-                if (!CanReach(transform.position,_targetPlayer.transform.position))
-                {
-                    TeleportRandomlyAroundPlayer(30, 60);
-                }
+
+                agent.acceleration = 20;
                 if (!_targetPlayer.isPlayerControlled && IsHost)
                 {
                     ChooseTarget();
@@ -280,13 +279,14 @@ public class FreddyAI : EnemyAI
             case (int)State.Sneaking:
                 if (_justSwitchedBehaviour)
                 {
+                    agent.acceleration = 8;
                     TeleportRandomlyAroundPlayer(15, 20);
                     IdleFreddy();
-                    agent.speed = 2f;
+                    agent.speed = 3f;
                     creatureAnimator.SetBool("Sneaking", true);
                     _justSwitchedBehaviour = false;
+                    agent.acceleration = 0;
                 }
-
                 Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(transform.position);
 
                 // Check if the object is within the camera's view
@@ -312,41 +312,15 @@ public class FreddyAI : EnemyAI
     }
     //IENUMERATOR
     //-----------------------------------------------------------------------------------------------------------------------
-    public void ChangeBehaviour()
-    {
-        RandomLaugh();
-        //Switch to spawning
-        _justSwitchedBehaviour = true;
-        SwitchToBehaviourState(0);
-        if (IsHost)
-        {
-            SetBehavior();
-        }
-        
-    }
-    IEnumerator Spawning()
-    {
-        creatureAnimator.SetTrigger("Teleport");
-        yield return new WaitForSeconds(1f);
-        ChangeBehaviour();
-        
+ 
 
-        _justSwitchedBehaviour = true;
-        _inCoroutine = false;
-    }
-    IEnumerator TeleportCooldown()
-    {
-        yield return new WaitForSeconds(12);
-
-        _inCoroutine = false;
-    }
     IEnumerator WaitAndChangeBehavior(float x)
     {
         yield return new WaitForSeconds(x);
         if (IsHost)
         {
             _justSwitchedBehaviour = true;
-            ChangeBehaviour();
+            SwitchToBehaviourState(0);
         }
         else
         {
@@ -354,6 +328,28 @@ public class FreddyAI : EnemyAI
         }
 
         _inCoroutine = false;
+    }
+
+    IEnumerator SeeIfAccessible()
+    {
+        int count = 0;
+        while (true)
+        {
+            yield return new WaitForSeconds(1);
+            if (_targetPlayer != null && !CanReach(transform.position, _targetPlayer.transform.position))
+            {
+                count++;
+                if (count >= 3)
+                {
+                    SwitchToBehaviourState(0);
+                    count = -3;
+                }
+            }
+            else
+            {
+                count = 0;
+            }
+        }
     }
     //SERVER LOGIC
     //-----------------------------------------------------------------------------------------------------------------------START SERVER
@@ -628,7 +624,6 @@ public class FreddyAI : EnemyAI
             //CONDITION = Player is target plauer
             if(player.IsTargetPlayer)
             {
-                Debug.Log("We Now have a _targetPlayer !");
                 _targetPlayer = player.ClientID.GetPlayerController();
                 _targetPlayerSleep = player;
                 isThereTarget = true;
@@ -659,13 +654,15 @@ public class FreddyAI : EnemyAI
 
     public bool TeleportRandomlyAroundPlayer(float minTeleportDistance, float maxTeleportDistance)
     {
-        if (targetPlayer != null)
+        Debug.Log("Just Tried teleporting!");
+        if (_targetPlayer != null)
         {
             int maxAttempts = 10;
             int attempts = 0;
 
             while (attempts < maxAttempts)
             {
+                Debug.Log("Attempt : " + attempts);
                 // Calculate a random angle around the player
                 float angle = Random.Range(0f, 360f);
 
@@ -678,18 +675,26 @@ public class FreddyAI : EnemyAI
                 // Calculate the teleport position
                 Vector3 teleportPosition = _targetPlayer.transform.position + direction * distance;
 
-                // Check if there's a path from enemy position to teleport position
-                if (CanReach(transform.position, teleportPosition))
+                // Raycast downwards to find the ground
+                RaycastHit hit;
+                if (Physics.Raycast(teleportPosition + Vector3.up * 100f, Vector3.down, out hit, Mathf.Infinity))
                 {
-                    // Check if there's a path from teleport position to player position
-                    if (CanReach(teleportPosition, _targetPlayer.transform.position))
-                    {
+                    // Use the hit point as the teleport position
+                    teleportPosition = hit.point;
+                }
+                else
+                {
+                    // Failed to find ground, skip this teleport attempt
+                    attempts++;
+                    continue;
+                }
 
-
-                        StartCoroutine(teleport(teleportPosition));
-
-                        return true;
-                    }
+                // Check if there's a path from teleport position to player position
+                if (CanReach(teleportPosition, _targetPlayer.transform.position))
+                {
+                    Debug.Log("WARPING--------------------------------------------------");
+                    agent.Warp(teleportPosition);
+                    return true;
                 }
 
                 attempts++;
@@ -703,24 +708,6 @@ public class FreddyAI : EnemyAI
         return false;
     }
 
-    IEnumerator teleport(Vector3 teleportPosition)
-    {
-        creatureAnimator.SetTrigger("Teleport");
-        yield return new WaitForSeconds(1f);
-        // Teleport the Krueger to the calculated position
-        agent.Warp(teleportPosition);
-
-        // Set the destination to the player's position
-        SetDestinationToPosition(_targetPlayer.transform.position, true);
-        
-        SwitchToBehaviourState(0);
-        // Turn the compass towards the player's camera position
-        turnCompass.LookAt(_targetPlayer.gameplayCamera.transform.position);
-
-        // Switch to the desired behaviour state
-    }
-
- 
     //Voice Logic
     public void RandomLaugh()
     {
@@ -854,7 +841,7 @@ public class FreddyAI : EnemyAI
 
         public void EnemyMeshAndPerson(bool enable)
         {
-            this.EnableEnemyMesh(enable, false);
+            EnableEnemyMesh(enable, false);
             if (enable)
             {
                 creatureVoice.volume = 100;
@@ -868,23 +855,22 @@ public class FreddyAI : EnemyAI
         //Kill Handler :
         public override void OnCollideWithPlayer(Collider other)
         {
-            base.OnCollideWithPlayer(other);
-            PlayerControllerB playerControllerB = this.MeetsStandardPlayerCollisionConditions(other);
-            //Stop if there is no player controller B
-            if (!((UnityEngine.Object) playerControllerB != (UnityEngine.Object) null))
-                return;
-            foreach (var player in _playerSleep)
+            Debug.Log("Oh no");
+            PlayerControllerB playerControllerB = other.gameObject.GetComponent<PlayerControllerB>();
+            if (playerControllerB != null)
             {
-                if (playerControllerB.GetClientId() == player.ClientID && playerControllerB.isPlayerControlled)
+                foreach (var player in _playerSleep)
                 {
-                    if (player.SleepMeter>=_enterSleep)
+                    if (playerControllerB.GetClientId() == player.ClientID && playerControllerB.isPlayerControlled)
                     {
-                        playerControllerB.KillPlayer(Vector3.zero,true, CauseOfDeath.Unknown, 1);
-                        
+                        if (player.SleepMeter>=_enterSleep)
+                        {
+                            playerControllerB.KillPlayer(Vector3.zero,true, CauseOfDeath.Unknown, 1);
+                            Debug.Log("KILL");
+                        }
                     }
                 }
             }
-            
             //TODO Implement kill behaviour
         }
         
@@ -902,7 +888,6 @@ public class FreddyAI : EnemyAI
     //TODO Stop it from running 2 times for ntg
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
-        Debug.Log("ClientSide "+x[0].SleepMeter);
         //Reload Index If death of player
         if (_playerSleep!=null)
         {
