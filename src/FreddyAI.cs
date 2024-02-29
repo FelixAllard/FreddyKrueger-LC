@@ -195,11 +195,6 @@ public class FreddyAI : EnemyAI
         if (_targetPlayer != null)
         {
             SetMovingTowardsTargetPlayer(_targetPlayer);
-            if (_targetPlayer.isInsideFactory != _wasInsideFactory)
-            {
-                _triggerTeleportDoor = true;
-                _wasInsideFactory = _targetPlayer.isInsideFactory;
-            }
         }
 
         
@@ -270,10 +265,9 @@ public class FreddyAI : EnemyAI
                     
                     _justSwitchedBehaviour = false;
                 }
-                if (_triggerTeleportDoor)
+                if (!CanReach(transform.position,_targetPlayer.transform.position))
                 {
                     TeleportRandomlyAroundPlayer(30, 60);
-                    _triggerTeleportDoor = false;
                 }
                 if (!_targetPlayer.isPlayerControlled && IsHost)
                 {
@@ -289,8 +283,6 @@ public class FreddyAI : EnemyAI
                     agent.speed = 2f;
                     creatureAnimator.SetBool("Sneaking", true);
                     _justSwitchedBehaviour = false;
-                    
-                    
                 }
 
                 Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(transform.position);
@@ -309,7 +301,6 @@ public class FreddyAI : EnemyAI
                         _inCoroutine = true;
                     }
                 }
-                
                 break;
             default:
                 Debug.Log("Behavior State Missing");
@@ -332,8 +323,6 @@ public class FreddyAI : EnemyAI
     }
     IEnumerator TeleportCooldown()
     {
-        
-        
         yield return new WaitForSeconds(12);
         creatureAnimator.SetTrigger("Teleport");
         RandomLaugh();
@@ -645,17 +634,30 @@ public class FreddyAI : EnemyAI
             _targetPlayer = null;
         }
     }
+    public bool CanReach(Vector3 pointA, Vector3 pointB)
+    {
+        NavMeshPath path = new NavMeshPath();
+        // Calculate the path between the two points
+        //TODO arrange this shit
+        
+        if (NavMesh.CalculatePath(pointA, pointB, NavMesh.AllAreas, path))
+        {
+            // Check if the path is valid
+            return path.status == NavMeshPathStatus.PathComplete;
+        }
 
- public bool TeleportRandomlyAroundPlayer(float minTeleportDistance,float maxTeleportDistance)
+        // Either there's no path or the path is invalid
+        return false;
+    }
+
+    public bool TeleportRandomlyAroundPlayer(float minTeleportDistance, float maxTeleportDistance)
     {
         if (targetPlayer != null)
         {
-            Vector3 teleportPosition = Vector3.zero;
-            bool foundValidPosition = false;
             int maxAttempts = 10;
             int attempts = 0;
 
-            while (!foundValidPosition && attempts < maxAttempts)
+            while (attempts < maxAttempts)
             {
                 // Calculate a random angle around the player
                 float angle = Random.Range(0f, 360f);
@@ -667,40 +669,50 @@ public class FreddyAI : EnemyAI
                 Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.forward;
 
                 // Calculate the teleport position
-                teleportPosition = _targetPlayer.transform.position + direction * distance;
+                Vector3 teleportPosition = _targetPlayer.transform.position + direction * distance;
 
-                // Ensure the teleport position is on the NavMesh
-                NavMeshHit hit;
-                if (NavMesh.SamplePosition(teleportPosition, out hit, maxTeleportDistance, NavMesh.AllAreas))
+                // Check if there's a path from enemy position to teleport position
+                if (CanReach(transform.position, teleportPosition))
                 {
-                    // Teleport the Krueger to the calculated position
-                    agent.Warp(hit.position); // Teleport the Krueger to the valid position on the NavMesh
-                    if(SetDestinationToPosition(_targetPlayer.transform.position, true))
+                    // Check if there's a path from teleport position to player position
+                    if (CanReach(teleportPosition, _targetPlayer.transform.position))
                     {
-                        foundValidPosition = true;
+
+
+                        StartCoroutine(teleport(teleportPosition));
+
+                        return true;
                     }
-                    turnCompass.LookAt(_targetPlayer.gameplayCamera.transform.position);
-
-                    // If a valid path is found, set destination to the player's position
-                    //agent.SetDestination(targetPlayer.transform.position);
-                    SwitchToBehaviourState(0);
-                    return true;
-
                 }
-                else
-                {
-                    attempts++;
-                }
+
+                attempts++;
             }
 
-            if (!foundValidPosition)
-            {
-                return false;
-            }
+            // Failed to find a valid teleport position after max attempts
+            return false;
         }
 
+        // No target player, teleportation not possible
         return false;
     }
+
+    IEnumerator teleport(Vector3 teleportPosition)
+    {
+        creatureAnimator.SetTrigger("Teleport");
+        yield return new WaitForSeconds(1f);
+        // Teleport the Krueger to the calculated position
+        agent.Warp(teleportPosition);
+
+        // Set the destination to the player's position
+        SetDestinationToPosition(_targetPlayer.transform.position, true);
+        
+        SwitchToBehaviourState(0);
+        // Turn the compass towards the player's camera position
+        turnCompass.LookAt(_targetPlayer.gameplayCamera.transform.position);
+
+        // Switch to the desired behaviour state
+    }
+
  
     //Voice Logic
     public void RandomLaugh()
