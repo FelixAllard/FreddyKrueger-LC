@@ -68,9 +68,13 @@ namespace FreddyKrueger {
     {
         [HarmonyPatch(nameof(RoundManager.BeginEnemySpawning))]
         [HarmonyPostfix]
-        static void Postfix()
+        private static void Postfix()
         {
-            RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1, Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
+            if (RoundManager.Instance.IsServer)
+            {
+                RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1, Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
+            }
+                
         }
     }
 }
