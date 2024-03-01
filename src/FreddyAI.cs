@@ -86,7 +86,8 @@ public class FreddyAI : EnemyAI
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
 
-    private List<PlayerSleep> _playerSleepServ;
+    [NonSerialized]
+    public List<PlayerSleep> playerSleepServ;
     
     
     
@@ -140,12 +141,13 @@ public class FreddyAI : EnemyAI
         StartCoroutine(SeeIfAccessible());
         
         //I hate my life... This is from EnemyAI. I believe it i necessary to be able to delete the enemy
+        /*
         this.thisNetworkObject = this.gameObject.GetComponentInChildren<NetworkObject>();
         if (this.IsOwner)
             this.SyncPositionToClients();
         else
             this.SetClientCalculatingAI(false);
-        
+        */
         
         if (creatureVoice == null)
         {
@@ -154,20 +156,7 @@ public class FreddyAI : EnemyAI
         
         if (IsServer)
         {
-            _playerSleepServ = new List<PlayerSleep>();
-            foreach (var t in RoundManager.Instance.playersManager.allPlayerScripts)
-            {
-                //Adds All the player with There client ID, sleep meter 0 and deactivated the target player
-                if (t.isPlayerControlled)
-                {
-                    _playerSleepServ.Add(new PlayerSleep(
-                        t.GetClientId(), 
-                        0, 
-                        false
-                    ));
-                }
-            }
-            
+            ReinitialiseList();
             _behaviourIndexServer = 0;
             _justSwitchedBehaviour = true;
         }
@@ -185,7 +174,24 @@ public class FreddyAI : EnemyAI
         //Behavior SEND Int
         _clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
     }
-    
+
+    public void ReinitialiseList()
+    {
+        playerSleepServ = new List<PlayerSleep>();
+        foreach (var t in RoundManager.Instance.playersManager.allPlayerScripts)
+        {
+            //Adds All the player with There client ID, sleep meter 0 and deactivated the target player
+            if (t.isPlayerControlled)
+            {
+                playerSleepServ.Add(new PlayerSleep(
+                    t.GetClientId(), 
+                    0, 
+                    false
+                ));
+            }
+        }
+    }
+
     [NonSerialized] private double _timer =0;
     private bool _setFirstBehaviour = false;
     private bool _inCoroutine;
@@ -377,36 +383,36 @@ public class FreddyAI : EnemyAI
     {
         
 
-        for (int count = 0; count < _playerSleepServ.Count; count++)
+        for (int count = 0; count < playerSleepServ.Count; count++)
         {
-            PlayerControllerB player = _playerSleepServ[count].ClientID.GetPlayerController();
+            PlayerControllerB player = playerSleepServ[count].ClientID.GetPlayerController();
             //HANDLE DEAD PLAYER
             if (!player.isPlayerControlled)
             {
                 //Remove DEAD player for target list
-                _playerSleepServ.RemoveAt(count);
+                playerSleepServ.RemoveAt(count);
             }
             else
             {
                 if (CheckIfAlone(player))
                 {
                     // Add 1 to the value of the player THAT IS ALONE
-                    _playerSleepServ[count].SleepMeter += 1;
+                    playerSleepServ[count].SleepMeter += 1;
                 }
                 else
                 {
                     // Remove 1 from the value of the player in the dictionary
-                    if (_playerSleepServ[count].SleepMeter > 0)
+                    if (playerSleepServ[count].SleepMeter > 0)
                     {
-                        if (_playerSleepServ[count].SleepMeter == 1)
+                        if (playerSleepServ[count].SleepMeter == 1)
                         {
                             //Handle if it is 1
-                            _playerSleepServ[count].SleepMeter = 0;
+                            playerSleepServ[count].SleepMeter = 0;
                         }
                         else
                         {
                             //handle if more than 1
-                            _playerSleepServ[count].SleepMeter -= 2;
+                            playerSleepServ[count].SleepMeter -= 2;
                         }
                     }
                 }
@@ -421,23 +427,23 @@ public class FreddyAI : EnemyAI
             }
         }
         //Sending computation to all clients
-        _serverMessageSleepArray.SendAllClients(_playerSleepServ);
+        _serverMessageSleepArray.SendAllClients(playerSleepServ);
     }
     public bool CheckIfAlone(PlayerControllerB player)
     {
         //GET Player Position
         Vector3 currentPlayerPosition = player.transform.position;
 
-        for (int count = 0; count < _playerSleepServ.Count; count++)
+        for (int count = 0; count < playerSleepServ.Count; count++)
         {
-            if (_playerSleepServ[count].ClientID != player.GetClientId())
+            if (playerSleepServ[count].ClientID != player.GetClientId())
             {
-                Vector3 otherPlayerPosition = _playerSleepServ[count].ClientID.GetPlayerController().transform.position;
+                Vector3 otherPlayerPosition = playerSleepServ[count].ClientID.GetPlayerController().transform.position;
                 // Calculate the distance between the current player and the other player
                 float distance = Vector3.Distance(currentPlayerPosition, otherPlayerPosition);
 
                 // Check if the distance is within the specified range
-                if (distance <= 10f && player != _playerSleepServ[count].ClientID.GetPlayerController())
+                if (distance <= 10f && player != playerSleepServ[count].ClientID.GetPlayerController())
                 {
                     // If the distance is less than or equal to 10, the current player is considered with another player
                     return false;
@@ -457,7 +463,7 @@ public class FreddyAI : EnemyAI
     {
         List<PlayerSleep> possibleTarget = new List<PlayerSleep>();
         //FInd which Player has a score over sleep treshold !!!
-        foreach (var t in _playerSleepServ)
+        foreach (var t in playerSleepServ)
         {
             if (t.SleepMeter >= _enterSleep && t.ClientID.GetPlayerController().isPlayerControlled ) //SLEEP METER TRESHOLD --- IMPORTANT
             {
@@ -513,6 +519,8 @@ public class FreddyAI : EnemyAI
             {
                 highestSleepPoints = player;
             }
+            //TODO Implement proper EQUAL POINTS behaviour
+            /*
             else if(player.TargetPoint == highestSleepPoints.TargetPoint)
             {
                 if (player.IsTargetPlayer)
@@ -537,10 +545,12 @@ public class FreddyAI : EnemyAI
                             break;
                     }
                 }
+                
             }
+            */
         }
         //Target player Becomes true for the target player and false for the rest
-        foreach (var player in _playerSleepServ)
+        foreach (var player in playerSleepServ)
         { 
             if (player.ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
             {

@@ -68,13 +68,32 @@ namespace FreddyKrueger {
     {
         [HarmonyPatch(nameof(RoundManager.BeginEnemySpawning))]
         [HarmonyPostfix]
-        private static void Postfix()
+        private static void PostfixSpawn()
         {
             if (RoundManager.Instance.IsServer)
             {
-                RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1, Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
+                if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
+                {
+                    RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1,
+                        Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
+
+                }
+                else
+                {
+                    UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
+                }
             }
-                
+
+        }
+
+        [HarmonyPatch(nameof(RoundManager.UnloadSceneObjectsEarly))]
+        [HarmonyPostfix]
+        private static void PostfixNoDespawn()
+        {
+            if (RoundManager.Instance.IsServer)
+            {
+                UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
+            }
         }
     }
 }
