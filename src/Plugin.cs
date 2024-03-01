@@ -70,7 +70,6 @@ namespace FreddyKrueger {
         [HarmonyPostfix]
         static void Postfix()
         {
-            Debug.Log("We are in BOYSSS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1, Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
         }
     }

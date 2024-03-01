@@ -132,6 +132,10 @@ public class FreddyAI : EnemyAI
         _maxSleep = 150;
         _inCoroutine = false;
         StartCoroutine(SeeIfAccessible());
+        if (creatureVoice == null)
+        {
+            creatureVoice = FindAudioSourceInChildren(transform, "Jeb");
+        }
         
         if (IsServer)
         {
@@ -841,14 +845,30 @@ public class FreddyAI : EnemyAI
 
         public void EnemyMeshAndPerson(bool enable)
         {
-            EnableEnemyMesh(enable, false);
-            if (enable)
+            EnableEnemyMesh(enable);
+        }
+        public override void EnableEnemyMesh(bool enable, bool overrideDoNotSet = false)
+        {
+            if (skinnedMeshRenderers == null || meshRenderers == null)
             {
-                creatureVoice.volume = 100;
+                Debug.LogError("skinnedMeshRenderers or meshRenderers array is null.");
+                return;
             }
-            else
+
+            int num = enable ? 19 : 23;
+            foreach (var renderer in skinnedMeshRenderers)
             {
-                creatureVoice.volume = 0;
+                if (renderer != null && (!renderer.CompareTag("DoNotSet") || overrideDoNotSet))
+                {
+                    renderer.gameObject.layer = num;
+                }
+            }
+            foreach (var renderer in meshRenderers)
+            {
+                if (renderer != null && (!renderer.CompareTag("DoNotSet") || overrideDoNotSet))
+                {
+                    renderer.gameObject.layer = num;
+                }
             }
         }
         
@@ -878,6 +898,7 @@ public class FreddyAI : EnemyAI
         {
             base.OnDestroy();
             _playerSleep = null;
+            StopAllCoroutines();
 
         }
 
@@ -892,6 +913,7 @@ public class FreddyAI : EnemyAI
     //TODO Stop it from running 2 times for ntg
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
+        Debug.Log("Received list");
         //Reload Index If death of player
         if (_playerSleep!=null)
         {
@@ -1037,4 +1059,27 @@ public class ColorToBWTransition : MonoBehaviour
 }
 
  */
+    //FIXING METHODS
+    private AudioSource FindAudioSourceInChildren(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            AudioSource audioSource = child.GetComponent<AudioSource>();
+            if (audioSource != null && child.name == name)
+            {
+                return audioSource;
+            }
+
+            // Recursive call to search in the children of this child
+            AudioSource found = FindAudioSourceInChildren(child, name);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        // If not found among the children, return null
+        return null;
+    }
+
 }
