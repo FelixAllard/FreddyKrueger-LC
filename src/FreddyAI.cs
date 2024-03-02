@@ -134,21 +134,15 @@ public class FreddyAI : EnemyAI
 
     public override void Start()
     {
-        //base.Start();
+        base.Start();
         _enterSleep = 50;
         _maxSleep = 150;
         _inCoroutine = false;
         StartCoroutine(SeeIfAccessible());
         
         //I hate my life... This is from EnemyAI. I believe it i necessary to be able to delete the enemy
-        /*
-        this.thisNetworkObject = this.gameObject.GetComponentInChildren<NetworkObject>();
-        if (this.IsOwner)
-            this.SyncPositionToClients();
-        else
-            this.SetClientCalculatingAI(false);
-        */
         
+
         if (creatureVoice == null)
         {
             creatureVoice = FindAudioSourceInChildren(transform, "Jeb");
@@ -345,7 +339,7 @@ public class FreddyAI : EnemyAI
         if (IsHost)
         {
             _justSwitchedBehaviour = true;
-            SwitchToBehaviourState(0);
+            SwitchToBehaviourClientRpc(0);
         }
         else
         {
@@ -366,7 +360,7 @@ public class FreddyAI : EnemyAI
                 count++;
                 if (count >= 3)
                 {
-                    SwitchToBehaviourState(0);
+                    SwitchToBehaviourClientRpc(0);
                     count = -3;
                 }
             }
@@ -572,7 +566,6 @@ public class FreddyAI : EnemyAI
     }
     public void SetBehavior()
     {
-        //TODO Add behavior to Unity Project
         if (_targetPlayer != null)
         {
             bool updateToClient = false;
@@ -618,7 +611,7 @@ public class FreddyAI : EnemyAI
             if (updateToClient)
             {
                 Debug.Log("Set behavior state :  " + _behaviourIndexServer + "   Index");
-                SwitchToBehaviourState(_behaviourIndexServer);
+                SwitchToBehaviourClientRpc(_behaviourIndexServer);
             }
         }
     }
