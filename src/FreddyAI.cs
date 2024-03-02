@@ -1,4 +1,5 @@
-﻿using UnityEngine.Bindings;
+﻿using DunGen;
+using UnityEngine.Bindings;
 using UnityEngine.Serialization;
 
 namespace FreddyKrueger;
@@ -211,6 +212,7 @@ public class FreddyAI : EnemyAI
     {
         base.DoAIInterval();
         
+        
         if (_targetPlayer != null)
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
@@ -250,6 +252,11 @@ public class FreddyAI : EnemyAI
                    
                     
                 }
+
+                if (IsHost)
+                {
+                    DoorHandler(false);
+                }
                 if (!_inCoroutine)
                 {
                     
@@ -267,6 +274,10 @@ public class FreddyAI : EnemyAI
                     creatureAnimator.SetBool("Running", true);
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
+                }
+                if (IsHost)
+                {
+                    DoorHandler(false);
                 }
                 if (!_inCoroutine)
                 {
@@ -287,7 +298,10 @@ public class FreddyAI : EnemyAI
                     
                     _justSwitchedBehaviour = false;
                 }
-
+                if (IsHost)
+                {
+                    DoorHandler(false);
+                }
                 agent.acceleration = 20;
                 if (!_targetPlayer.isPlayerControlled && IsHost)
                 {
@@ -305,6 +319,10 @@ public class FreddyAI : EnemyAI
                     creatureAnimator.SetBool("Sneaking", true);
                     _justSwitchedBehaviour = false;
                     agent.acceleration = 0;
+                }
+                if (IsHost)
+                {
+                    DoorHandler(false);
                 }
                 Vector3 screenPoint = _targetPlayer.gameplayCamera.WorldToViewportPoint(transform.position);
 
@@ -615,6 +633,30 @@ public class FreddyAI : EnemyAI
             }
         }
     }
+
+    private void DoorHandler(bool breakDoor)
+    {
+        //TODO create seperate variable for less Fetching
+        foreach (DoorLock door in FindObjectsOfType(typeof(DoorLock)) as DoorLock[])
+        {
+            var thisDoor = door.transform.parent.transform.parent.transform.parent.gameObject;
+            if (Vector3.Distance(transform.position, thisDoor.transform.position) <= 4f)
+            {
+                if (!breakDoor)
+                {
+                    door.OpenDoorAsEnemyClientRpc();
+                }
+                if (breakDoor)
+                {
+                }
+            }
+                /*
+                 WILL BE USED TO BREAK DOORS
+            if (!door.GetComponent<Rigidbody>())
+            {
+            }*/
+        }
+    }
     
     //------------------------------------------------------------------------------------------------------------------------END SERVER
     //Also Assign target Player
@@ -778,14 +820,16 @@ public class FreddyAI : EnemyAI
         [ServerRpc]
         public void BreakDoorServerRpc()
         {
-            foreach (DoorLock Door in FindObjectsOfType(typeof(DoorLock)) as DoorLock[])
+            foreach (DoorLock door in FindObjectsOfType(typeof(DoorLock)) as DoorLock[])
             {
-                var ThisDoor = Door.transform.parent.transform.parent.transform.parent.gameObject;
-                if (!ThisDoor.GetComponent<Rigidbody>())
+                var thisDoor = door.transform.parent.transform.parent.transform.parent.gameObject;
+                if (!door.GetComponent<Rigidbody>())
                 {
-                    if (Vector3.Distance(transform.position, ThisDoor.transform.position) <= 4f)
+                    if (Vector3.Distance(transform.position, thisDoor.transform.position) <= 4f)
                     {
-                        BashDoorClientRpc(ThisDoor, (targetPlayer.transform.position - transform.position).normalized * 20);
+                        Debug.Log("Crying beau coup");
+                        Debug.Log(thisDoor.name);
+                        BashDoorClientRpc(thisDoor, (targetPlayer.transform.position - transform.position).normalized * 20);
                     }
                 }
             }
@@ -853,6 +897,15 @@ public class FreddyAI : EnemyAI
                 }
                 
             }
+            else
+            {
+                EnemyMeshAndPerson(false);
+                if (!creatureSFX.isPlaying)
+                {
+                    //TODO implement fade volume
+                    creatureSFX.Stop();
+                }
+            }
             if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
             {
                 creatureSFX.PlayOneShot(terminus);
@@ -866,6 +919,15 @@ public class FreddyAI : EnemyAI
         public void EnemyMeshAndPerson(bool enable)
         {
             EnableEnemyMesh(enable);
+            if (enable == true)
+            {
+                creatureVoice.mute = false;
+            }
+            else
+            {
+                creatureVoice.mute = true;
+                
+            }
         }
         public override void EnableEnemyMesh(bool enable, bool overrideDoNotSet = false)
         {
