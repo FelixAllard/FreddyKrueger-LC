@@ -118,6 +118,7 @@ public class FreddyAI : EnemyAI
     //TRESHOLDS FOR QUICK SWITCHING
     private int _enterSleep;
     private int _maxSleep;
+    private bool _freddyVisible;
 
 
     enum State {
@@ -212,7 +213,6 @@ public class FreddyAI : EnemyAI
     {
         base.DoAIInterval();
         
-        
         if (_targetPlayer != null)
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
@@ -248,21 +248,17 @@ public class FreddyAI : EnemyAI
                     creatureAnimator.SetBool("Walking",true);
                     agent.speed = 3f;
                     _justSwitchedBehaviour = false;
-                    StartCoroutine(WaitAndChangeBehavior(15f)); 
-                   
+                    if (!_inCoroutine)
+                    {
+                        StartCoroutine(WaitAndChangeBehavior(15f)); 
+                        _inCoroutine = true;
+                    }
                     
                 }
-
                 if (IsHost)
                 {
                     DoorHandler(false);
                 }
-                if (!_inCoroutine)
-                {
-                    
-                    _inCoroutine = true;
-                }
-                
                 break;
             case (int)State.Running:
                 if (_justSwitchedBehaviour)
@@ -274,15 +270,15 @@ public class FreddyAI : EnemyAI
                     creatureAnimator.SetBool("Running", true);
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
+                    if (!_inCoroutine)
+                    {
+                        StartCoroutine(WaitAndChangeBehavior(12f));
+                        _inCoroutine = true;
+                    }
                 }
                 if (IsHost)
                 {
                     DoorHandler(false);
-                }
-                if (!_inCoroutine)
-                {
-                    StartCoroutine(WaitAndChangeBehavior(12f));
-                    _inCoroutine = true;
                 }
                 break;
             case (int)State.RunningClaw:
@@ -303,11 +299,6 @@ public class FreddyAI : EnemyAI
                     DoorHandler(false);
                 }
                 agent.acceleration = 20;
-                if (!_targetPlayer.isPlayerControlled && IsHost)
-                {
-                    ChooseTarget();
-                }
-                
                 break;
             case (int)State.Sneaking:
                 if (_justSwitchedBehaviour)
@@ -356,14 +347,16 @@ public class FreddyAI : EnemyAI
         yield return new WaitForSeconds(x);
         if (IsHost)
         {
-            _justSwitchedBehaviour = true;
+            
             SwitchToBehaviourClientRpc(0);
         }
         else
         {
+            
             Debug.Log("Awaiting Host Behavior");
         }
-
+        
+        _justSwitchedBehaviour = true;
         _inCoroutine = false;
     }
 
@@ -494,35 +487,36 @@ public class FreddyAI : EnemyAI
         }
         foreach (var player in possibleTarget)
         {
-            if (player.ClientID.GetPlayerController().isInsideFactory)
+            PlayerControllerB spaceRamPlayerHandler= player.ClientID.GetPlayerController();
+            if (spaceRamPlayerHandler.isInsideFactory)
             {
                 player.TargetPoint += 3;
             }
-            if (player.ClientID.GetPlayerController().criticallyInjured)
+            if (spaceRamPlayerHandler.criticallyInjured)
             {
                 player.TargetPoint += 5;
             }
 
-            if (CheckIfAlone(player.ClientID.GetPlayerController()))
+            if (CheckIfAlone(spaceRamPlayerHandler))
             {
                 player.TargetPoint += 7;
             }
 
-            if (player.ClientID.GetPlayerController().isInHangarShipRoom)
+            if (spaceRamPlayerHandler.isInHangarShipRoom)
             {
                 player.TargetPoint -= 3;
             }
 
-            if (player.ClientID.GetPlayerController().carryWeight >= 50)
+            if (spaceRamPlayerHandler.carryWeight >= 50)
             {
                 player.TargetPoint += 2;
             }
-            if (player.ClientID.GetPlayerController().carryWeight >= 100)
+            if (spaceRamPlayerHandler.carryWeight >= 100)
             {
                 player.TargetPoint += 2;
             }
 
-            if (player.ClientID.GetPlayerController().carryWeight == 0)
+            if (spaceRamPlayerHandler.carryWeight == 0)
             {
                 player.TargetPoint -= 2;
             }
@@ -573,7 +567,6 @@ public class FreddyAI : EnemyAI
                     Debug.Log("Setting first behaviour!");
                     _setFirstBehaviour = true;
                     SetBehavior();
-
                 }
             }
             else
@@ -975,6 +968,7 @@ public class FreddyAI : EnemyAI
             }
             //TODO Implement kill behaviour
         }
+        
 
         public override void OnDestroy()
         {
