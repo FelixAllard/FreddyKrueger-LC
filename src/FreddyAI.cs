@@ -1,4 +1,5 @@
-﻿using DunGen;
+﻿using DigitalRuby.ThunderAndLightning;
+using DunGen;
 using UnityEngine.Bindings;
 using UnityEngine.Serialization;
 
@@ -59,7 +60,7 @@ public class PlayerSleep
     public int targetPoint;
 }
 
-public class FreddyAI : EnemyAI
+public class CollisionHandler : EnemyAI
 {
     
     //COMPONENTS IMPORT
@@ -83,6 +84,7 @@ public class FreddyAI : EnemyAI
     public Transform turnCompass;
     public Transform attackArea;
     public AudioSource oneShotCreature;
+    public BoxCollider freddyHitBox;
     
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
@@ -128,12 +130,7 @@ public class FreddyAI : EnemyAI
         RunningClaw, 
         Sneaking
     }
-
-    public void Awake()
-    {
-        
-    }
-
+    
     public override void Start()
     {
         base.Start();
@@ -141,10 +138,6 @@ public class FreddyAI : EnemyAI
         _maxSleep = 150;
         _inCoroutine = false;
         StartCoroutine(SeeIfAccessible());
-        
-        //I hate my life... This is from EnemyAI. I believe it i necessary to be able to delete the enemy
-        
-
         if (creatureVoice == null)
         {
             creatureVoice = FindAudioSourceInChildren(transform, "Jeb");
@@ -212,7 +205,7 @@ public class FreddyAI : EnemyAI
     public override void DoAIInterval()
     {
         base.DoAIInterval();
-        
+        CollisionHandlerFreddy();
         if (_targetPlayer != null)
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
@@ -225,7 +218,7 @@ public class FreddyAI : EnemyAI
                 {
                     agent.acceleration = 0;
                     IdleFreddy();
-
+                    
                     _justSwitchedBehaviour = false;
                     creatureAnimator.SetTrigger("Teleport");
                     
@@ -968,7 +961,35 @@ public class FreddyAI : EnemyAI
             }
             //TODO Implement kill behaviour
         }
+    //FOOTSTEP SOUND WAY TO DO IT
+    
+        /*
+        public void SelectAndPlayFootstep()
+            {     
+                switch (currentTerrain)
+                {
+                    case CURRENT_TERRAIN.GRAVEL:
+                        PlayFootstep(1);
+                        break;
         
+                    case CURRENT_TERRAIN.GRASS:
+                        PlayFootstep(0);
+                        break;
+        
+                    case CURRENT_TERRAIN.WOOD_FLOOR:
+                        PlayFootstep(2);
+                        break;
+        
+                    case CURRENT_TERRAIN.WATER:
+                        PlayFootstep(3);
+                        break;
+        
+                    default:
+                        PlayFootstep(0);
+                        break;
+                }
+            }
+        */
 
         public override void OnDestroy()
         {
@@ -1135,6 +1156,13 @@ public class ColorToBWTransition : MonoBehaviour
 
  */
     //FIXING METHODS
+    public void CollisionHandlerFreddy()
+    {
+        if(freddyHitBox !=null)
+        {
+            Debug.Log("Idk what the issue is");
+        }
+    }
     private AudioSource FindAudioSourceInChildren(Transform parent, string name)
     {
         foreach (Transform child in parent)
