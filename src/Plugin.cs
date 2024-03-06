@@ -81,7 +81,7 @@ namespace FreddyKrueger {
         {
             if (RoundManager.Instance.IsServer)
             {
-                if (!UnityEngine.Object.FindObjectOfType<CollisionHandler>())
+                if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
                 {
                     RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1,
                         Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
@@ -89,7 +89,7 @@ namespace FreddyKrueger {
                 }
                 else
                 {
-                    UnityEngine.Object.FindObjectOfType<CollisionHandler>().ReinitialiseList();
+                    UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
                 }
             }
 
@@ -105,14 +105,14 @@ namespace FreddyKrueger {
         {
             if (RoundManager.Instance.IsServer)
             {
-                if (!UnityEngine.Object.FindObjectOfType<CollisionHandler>())
+                if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
                 {
                     RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1,
                         Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
                 }
                 else
                 {
-                    UnityEngine.Object.FindObjectOfType<CollisionHandler>().ReinitialiseList();
+                    UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace FreddyKrueger {
             Debug.Log((object) "Despawning props and enemies #3 MODIFIED CLASS :D");
             RoundManager.Instance.isSpawningEnemies = false;
             EnemyAI[] findObjectsOfType = UnityEngine.Object.FindObjectsOfType<EnemyAI>();
-            EnemyAI freddy = UnityEngine.Object.FindObjectOfType<CollisionHandler>();
+            EnemyAI freddy = UnityEngine.Object.FindObjectOfType<FreddyAI>();
             
             Debug.Log((object) string.Format("Enemies on map: {0}", (object) findObjectsOfType.Length));
             for (int index = 0; index < findObjectsOfType.Length; ++index)
@@ -155,7 +155,7 @@ namespace FreddyKrueger {
             RoundManager.Instance.currentOutsideEnemyPower = 0;
             if (RoundManager.Instance.IsServer)
             {
-                UnityEngine.Object.FindObjectOfType<CollisionHandler>().ReinitialiseList();
+                UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
             }
             return false;
         }

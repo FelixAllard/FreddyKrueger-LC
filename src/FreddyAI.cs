@@ -60,7 +60,7 @@ public class PlayerSleep
     public int targetPoint;
 }
 
-public class CollisionHandler : EnemyAI
+public class FreddyAI : EnemyAI
 {
     
     //COMPONENTS IMPORT
@@ -84,7 +84,6 @@ public class CollisionHandler : EnemyAI
     public Transform turnCompass;
     public Transform attackArea;
     public AudioSource oneShotCreature;
-    public BoxCollider freddyHitBox;
     
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
@@ -205,7 +204,7 @@ public class CollisionHandler : EnemyAI
     public override void DoAIInterval()
     {
         base.DoAIInterval();
-        CollisionHandlerFreddy();
+        SwingAttackHitClientRpc();
         if (_targetPlayer != null)
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
@@ -315,11 +314,11 @@ public class CollisionHandler : EnemyAI
                 if (isVisible)
                 {
                     IdleFreddy();
-                    RandomLaugh();
+                    RandomLaughClientRpc();
                     agent.speed = 0f;
                     if (!_inCoroutine)
                     {
-                        RandomLaugh();
+                        RandomLaughClientRpc();
                         creatureAnimator.SetTrigger("Suprised");
                         StartCoroutine(WaitAndChangeBehavior(3f));
                         _inCoroutine = true;
@@ -463,7 +462,7 @@ public class CollisionHandler : EnemyAI
         //FInd which Player has a score over sleep treshold !!!
         foreach (var t in playerSleepServ)
         {
-            if (t.SleepMeter >= _enterSleep && t.ClientID.GetPlayerController().isPlayerControlled ) //SLEEP METER TRESHOLD --- IMPORTANT
+            if (t.SleepMeter >= _enterSleep && t.ClientID.GetPlayerController().isPlayerControlled ) // SLEEP METER TRESHOLD --- IMPORTANT
             {
                 possibleTarget.Add(t);
             }
@@ -760,7 +759,8 @@ public class CollisionHandler : EnemyAI
     }
 
     //Voice Logic
-    public void RandomLaugh()
+    [ClientRpc]
+    public void RandomLaughClientRpc()
     {
         switch (RandomNumberGenerator.GetInt32(1,11))
         {
@@ -1156,11 +1156,24 @@ public class ColorToBWTransition : MonoBehaviour
 
  */
     //FIXING METHODS
-    public void CollisionHandlerFreddy()
+    
+    [ClientRpc]
+    public void SwingAttackHitClientRpc()
     {
-        if(freddyHitBox !=null)
+        Debug.Log("Freddy met collision rules with player");
+        int playerLayer = 1 << 3; // Assuming the layer for players is 3, adjust accordingly
+        Collider[] hitColliders = Physics.OverlapBox(attackArea.position, attackArea.localScale, Quaternion.identity, playerLayer);
+        if (hitColliders.Length > 0)
         {
-            Debug.Log("Idk what the issue is");
+            foreach (var playerCollider in hitColliders)
+            {
+                PlayerControllerB playerControllerB = playerCollider.GetComponent<PlayerControllerB>();
+                if (playerControllerB != null)
+                {
+                    RandomLaughClientRpc();
+                    playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Drowning,1);
+                }
+            }
         }
     }
     private AudioSource FindAudioSourceInChildren(Transform parent, string name)
