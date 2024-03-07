@@ -1,9 +1,12 @@
-﻿using DigitalRuby.ThunderAndLightning;
+﻿using System.Linq;
+using DigitalRuby.ThunderAndLightning;
 using DunGen;
 using UnityEngine.Bindings;
-using UnityEngine.Serialization;
+
 
 namespace FreddyKrueger;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +17,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
+using UnityEngine.Rendering;
 //COMPONENTS IMPORTS
 
 
@@ -84,6 +88,7 @@ public class FreddyAI : EnemyAI
     public Transform turnCompass;
     public Transform attackArea;
     public AudioSource oneShotCreature;
+    public Material desaturationMaterial;
     
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
@@ -180,6 +185,23 @@ public class FreddyAI : EnemyAI
         }
     }
 
+    public void CheckIfMissingPlayer()
+    {
+        foreach (var player in _playerSleep)
+        {
+            if (player.ClientID.GetPlayerController().isPlayerControlled)
+            {
+                
+            }
+            else
+            {
+                _playerSleep.Remove(player);
+                _serverMessageSleepArray.SendAllClients(_playerSleep);
+            }
+            
+        }
+    }
+
     [NonSerialized] private double _timer =0;
     private bool _setFirstBehaviour = false;
     private bool _inCoroutine;
@@ -209,8 +231,6 @@ public class FreddyAI : EnemyAI
         {
             SetDestinationToPosition(_targetPlayer.transform.position, true);
         }
-       
-        
         switch(currentBehaviourStateIndex) {
             case (int)State.Spawning:
                 if (_targetPlayer)
@@ -219,8 +239,7 @@ public class FreddyAI : EnemyAI
                     IdleFreddy();
                     
                     _justSwitchedBehaviour = false;
-                    creatureAnimator.SetTrigger("Teleport");
-                    
+                    DoAnimationClientRpc("Teleport");
                     if (IsHost)
                     {
                         SetBehavior();
@@ -234,10 +253,12 @@ public class FreddyAI : EnemyAI
             case (int)State.Walking:
                 if (_justSwitchedBehaviour)
                 {
+                    Debug.Log("Do we ave a behaviour?" +
+                              "");
                     agent.acceleration = 8;
-                    TeleportRandomlyAroundPlayer(10, 15);
+                    TeleportRandomlyAroundPlayer(20, 25);
                     IdleFreddy();
-                    creatureAnimator.SetBool("Walking",true);
+                    DoAnimationClientRpc("Walking",true);
                     agent.speed = 3f;
                     _justSwitchedBehaviour = false;
                     if (!_inCoroutine)
@@ -259,7 +280,7 @@ public class FreddyAI : EnemyAI
                     
                     TeleportRandomlyAroundPlayer(20, 30);
                     IdleFreddy();
-                    creatureAnimator.SetBool("Running", true);
+                    DoAnimationClientRpc("Running",true);
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
                     if (!_inCoroutine)
@@ -281,7 +302,7 @@ public class FreddyAI : EnemyAI
                     float _maxTeleport = ((40 - (_targetPlayerSleep.SleepMeter - _maxSleep)) / 2) * 3;
                     TeleportRandomlyAroundPlayer((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                     IdleFreddy();
-                    creatureAnimator.SetBool("RunWithClaw", true);
+                    DoAnimationClientRpc("RunWithClaw",true);
                     agent.speed = 6;
                     
                     _justSwitchedBehaviour = false;
@@ -299,7 +320,7 @@ public class FreddyAI : EnemyAI
                     TeleportRandomlyAroundPlayer(15, 20);
                     IdleFreddy();
                     agent.speed = 3f;
-                    creatureAnimator.SetBool("Sneaking", true);
+                    DoAnimationClientRpc("Sneaking", true);
                     _justSwitchedBehaviour = false;
                     agent.acceleration = 0;
                 }
@@ -319,7 +340,7 @@ public class FreddyAI : EnemyAI
                     if (!_inCoroutine)
                     {
                         RandomLaughClientRpc();
-                        creatureAnimator.SetTrigger("Suprised");
+                        DoAnimationClientRpc("Suprised");
                         StartCoroutine(WaitAndChangeBehavior(3f));
                         _inCoroutine = true;
                     }
@@ -378,8 +399,7 @@ public class FreddyAI : EnemyAI
     
     public void UpdateSleep()
     {
-        
-
+        ReinitialiseList();
         for (int count = 0; count < playerSleepServ.Count; count++)
         {
             PlayerControllerB player = playerSleepServ[count].ClientID.GetPlayerController();
@@ -839,18 +859,6 @@ public class FreddyAI : EnemyAI
                 //newAS.PlayOneShot(audioClips[3]);
             }
         }
-        public bool CheckDoor()
-        {
-            foreach (DoorLock Door in FindObjectsOfType(typeof(DoorLock)) as DoorLock[])
-            {
-                var ThisDoor = Door.transform.parent.transform.parent.gameObject;
-                if (Vector3.Distance(transform.position, ThisDoor.transform.position) <= 4f)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
         IEnumerator TurnOffC(Rigidbody rigidbody,float time)
         {
             rigidbody.detectCollisions = false;
@@ -1170,11 +1178,24 @@ public class ColorToBWTransition : MonoBehaviour
                 PlayerControllerB playerControllerB = playerCollider.GetComponent<PlayerControllerB>();
                 if (playerControllerB != null)
                 {
-                    RandomLaughClientRpc();
-                    playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Drowning,1);
+                    PlayerSleep sleepTouchedPlayer = _playerSleep.FirstOrDefault(obj => obj.ClientID == playerControllerB.GetClientId());
+                    if (sleepTouchedPlayer.SleepMeter >= _enterSleep)
+                    {
+                        RandomLaughClientRpc();
+                        playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Drowning,1);
+                    }
+                    else
+                    {
+                        LogIfDebugBuild("Sleep meter to low for : " + sleepTouchedPlayer.ClientID );
+                    }
                 }
             }
         }
+    }
+    [ClientRpc]
+    public void ChangeAnimationClientRPC()
+    {
+        
     }
     private AudioSource FindAudioSourceInChildren(Transform parent, string name)
     {
@@ -1196,6 +1217,23 @@ public class ColorToBWTransition : MonoBehaviour
 
         // If not found among the children, return null
         return null;
+    }
+    [ClientRpc]
+    public void DoAnimationClientRpc(string animationName, bool setActive)
+    {
+        LogIfDebugBuild($"Animation: {animationName}");
+        creatureAnimator.SetBool(animationName,setActive);
+    }
+    [ClientRpc]
+    public void DoAnimationClientRpc(string animationName)
+    {
+        LogIfDebugBuild($"Animation: {animationName}");
+        creatureAnimator.SetTrigger(animationName);
+    }
+    void LogIfDebugBuild(string text) {
+    #if DEBUG
+            Plugin.Logger.LogInfo(text);
+    #endif
     }
 
 }
