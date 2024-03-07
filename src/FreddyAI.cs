@@ -88,7 +88,6 @@ public class FreddyAI : EnemyAI
     public Transform turnCompass;
     public Transform attackArea;
     public AudioSource oneShotCreature;
-    public Material desaturationMaterial;
     
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
@@ -105,9 +104,8 @@ public class FreddyAI : EnemyAI
     
     //Fast info
     private ulong _clientID;
-    private ulong _lastSleepMeter;
 
-    private int indexSleepArrayTarget = -1;
+    private int _indexSleepArrayTarget = -1;
     private int _indexSleepArraySleep = -1;
     
     
@@ -189,16 +187,13 @@ public class FreddyAI : EnemyAI
     {
         foreach (var player in _playerSleep)
         {
-            if (player.ClientID.GetPlayerController().isPlayerControlled)
+            if (player.ClientID.GetPlayerController().isPlayerDead)
             {
-                
-            }
-            else
-            {
+                Debug.Log("Removing Player From array");
                 _playerSleep.Remove(player);
                 _serverMessageSleepArray.SendAllClients(_playerSleep);
+                ResetIndexForClientRpc();
             }
-            
         }
     }
 
@@ -399,7 +394,7 @@ public class FreddyAI : EnemyAI
     
     public void UpdateSleep()
     {
-        ReinitialiseList();
+        CheckIfMissingPlayer();
         for (int count = 0; count < playerSleepServ.Count; count++)
         {
             PlayerControllerB player = playerSleepServ[count].ClientID.GetPlayerController();
@@ -667,45 +662,13 @@ public class FreddyAI : EnemyAI
     //Also Assign target Player
     private void IdleFreddy()
     {
-        creatureAnimator.SetBool("Running", false);
-        creatureAnimator.SetBool("Walking", false);
-        creatureAnimator.SetBool("RunWithClaw", false);
-        creatureAnimator.SetBool("Sneaking",false);
+        DoAnimationClientRpc("Running",false);
+        DoAnimationClientRpc("Walking",false);
+        DoAnimationClientRpc("RunWithClaw",false);
+        DoAnimationClientRpc("Sneaking",false);
         
     }
     
-    private void SetTargetPlayer()
-    {
-        var count = 0;
-        bool isThereTarget = false;
-        foreach (var player in _playerSleep)
-        {
-
-            //Handle if LocalPlayer = Target player
-            if (player.ClientID == _clientID)
-            {
-                //Add the array number of the local player too indexSleepArraySleep
-                if (_indexSleepArraySleep == -1)
-                {
-                    _indexSleepArraySleep = count;
-                }
-            }
-            //Set target Player
-            //CONDITION = Player is target plauer
-            if(player.IsTargetPlayer)
-            {
-                _targetPlayer = player.ClientID.GetPlayerController();
-                _targetPlayerSleep = player;
-                isThereTarget = true;
-            }
-            count++;
-        }
-        if (!isThereTarget)
-        {
-            Debug.Log("NO TARGET PLAYER");
-            _targetPlayer = null;
-        }
-    }
     public bool CanReach(Vector3 pointA, Vector3 pointB)
     {
         NavMeshPath path = new NavMeshPath();
@@ -820,7 +783,7 @@ public class FreddyAI : EnemyAI
         }
     }
 
-    
+    /*
     //Break Door On touch
     //---------------------------------------------------
         [ServerRpc]
@@ -866,6 +829,7 @@ public class FreddyAI : EnemyAI
             rigidbody.detectCollisions = true;
             Destroy(rigidbody.gameObject, 5);
         }
+        */
         //-------------------------------------------------------------
         //FREDDY Stage local handler
         private void LocalPlayerFreddyHandler()
@@ -967,7 +931,6 @@ public class FreddyAI : EnemyAI
                     }
                 }
             }
-            //TODO Implement kill behaviour
         }
     //FOOTSTEP SOUND WAY TO DO IT
     
@@ -1010,161 +973,68 @@ public class FreddyAI : EnemyAI
 
         //______________________________________________________//
         
-        
-        
-        
     
     //MESSAGE HANDLER LOGIC
     //TODO Stop it from running 2 times for ntg
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
-        //Reload Index If death of player
-        if (_playerSleep!=null)
+        _playerSleep = x;
+        if (_indexSleepArraySleep == -1)
         {
-            if (_playerSleep.Count!=x.Count)
+            FindMeInArray();
+        }
+        else
+        {
+            LocalPlayerFreddyHandler();
+        }
+    }
+    
+    private AudioSource FindAudioSourceInChildren(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            AudioSource audioSource = child.GetComponent<AudioSource>();
+            if (audioSource != null && child.name == name)
             {
-                _indexSleepArraySleep = -1;
+                return audioSource;
+            }
+            // Recursive call to search in the children of this child
+            AudioSource found = FindAudioSourceInChildren(child, name);
+            if (found != null)
+            {
+                return found;
             }
         }
-        _playerSleep = x;
-        SetTargetPlayer();
-        LocalPlayerFreddyHandler();
+        // If not found among the children, return null
+        return null;
     }
-    
-    /*
-    private float transitionDuration = 5f; // Transition duration in seconds
-    private float startTime;
-    private bool transitioning = false;
-
-    private Color[] originalColors; // Store original colors for each material
-    
-    //
-    // private void Start()
-    // {
-    //     startTime = Time.time;
-    //     CacheOriginalColors();
-    // }
-    //
-    // private void Update()
-    // {
-    //     if (transitioning)
-    //     {
-    //         float t = Mathf.Clamp01((Time.time - startTime) / transitionDuration);
-    //        ApplyDesaturation(t);
-    //     }
-    // }
-
-    public void StartTransition()
+    private void FindMeInArray()
     {
-        transitioning = true;
-    }
-
-    private void CacheOriginalColors()
-    {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        originalColors = new Color[renderers.Length];
-
-        for (int i = 0; i < renderers.Length; i++)
+        var count = 0;
+        foreach (var player in _playerSleep)
         {
-            originalColors[i] = renderers[i].material.color;
+
+            //Handle if LocalPlayer = Target player
+            if (player.ClientID == _clientID)
+            {
+                //Add the array number of the local player too indexSleepArraySleep
+                if (_indexSleepArraySleep == -1)
+                {
+                    _indexSleepArraySleep = count;
+                }
+            }
+
+            if (_targetPlayer.GetClientId() == player.ClientID)
+            {
+                _indexSleepArrayTarget = count;
+            }
         }
     }
-
-    private void ApplyDesaturation(float t)
+    [ClientRpc]
+    private void ResetIndexForClientRpc()
     {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            Material material = renderers[i].material;
-            Color originalColor = originalColors[i];
-
-            float grayscaleValue = 0.299f * originalColor.r + 0.587f * originalColor.g + 0.114f * originalColor.b;
-            Color grayscaleColor = new Color(grayscaleValue, grayscaleValue, grayscaleValue, originalColor.a);
-
-            material.color = Color.Lerp(originalColor, grayscaleColor, t);
-        }
+        _indexSleepArraySleep = -1;
     }
-/*
- * using UnityEngine;
-
-public class ColorToBWTransition : MonoBehaviour
-{
-    public float transitionDuration = 5f; // Transition duration in seconds
-    private float startTime;
-    private bool transitioning = false;
-    private bool isBlackAndWhite = false; // Current mode
-
-    private Color[] originalColors; // Store original colors for each material
-
-    private void Start()
-    {
-        startTime = Time.time;
-        CacheOriginalColors();
-    }
-
-    private void Update()
-    {
-        if (transitioning)
-        {
-            float t = Mathf.Clamp01((Time.time - startTime) / transitionDuration);
-            ApplyDesaturation(t);
-        }
-    }
-
-    public void StartTransition()
-    {
-        transitioning = true;
-        isBlackAndWhite = !isBlackAndWhite; // Toggle mode
-    }
-
-    public void SwitchToOriginalColors()
-    {
-        transitioning = false;
-        isBlackAndWhite = false; // Switch back to color mode
-        RestoreOriginalColors();
-    }
-
-    private void CacheOriginalColors()
-    {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        originalColors = new Color[renderers.Length];
-
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            originalColors[i] = renderers[i].material.color;
-        }
-    }
-
-    private void ApplyDesaturation(float t)
-    {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            Material material = renderers[i].material;
-            Color originalColor = originalColors[i];
-
-            float grayscaleValue = 0.299f * originalColor.r + 0.587f * originalColor.g + 0.114f * originalColor.b;
-            Color grayscaleColor = new Color(grayscaleValue, grayscaleValue, grayscaleValue, originalColor.a);
-
-            Color targetColor = isBlackAndWhite ? grayscaleColor : originalColor;
-            material.color = Color.Lerp(material.color, targetColor, t);
-        }
-    }
-
-    private void RestoreOriginalColors()
-    {
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            Material material = renderers[i].material;
-            material.color = originalColors[i];
-        }
-    }
-}
-
- */
-    //FIXING METHODS
-    
     [ClientRpc]
     public void SwingAttackHitClientRpc()
     {
@@ -1193,30 +1063,10 @@ public class ColorToBWTransition : MonoBehaviour
         }
     }
     [ClientRpc]
-    public void ChangeAnimationClientRPC()
+    public void SetTargetPlayerClientRpc(int playerIndex, PlayerControllerB playerControllerB)
     {
-        
-    }
-    private AudioSource FindAudioSourceInChildren(Transform parent, string name)
-    {
-        foreach (Transform child in parent)
-        {
-            AudioSource audioSource = child.GetComponent<AudioSource>();
-            if (audioSource != null && child.name == name)
-            {
-                return audioSource;
-            }
-
-            // Recursive call to search in the children of this child
-            AudioSource found = FindAudioSourceInChildren(child, name);
-            if (found != null)
-            {
-                return found;
-            }
-        }
-
-        // If not found among the children, return null
-        return null;
+        _targetPlayer = playerControllerB;
+        _indexSleepArrayTarget = playerIndex;
     }
     [ClientRpc]
     public void DoAnimationClientRpc(string animationName, bool setActive)
@@ -1235,5 +1085,4 @@ public class ColorToBWTransition : MonoBehaviour
             Plugin.Logger.LogInfo(text);
     #endif
     }
-
 }
