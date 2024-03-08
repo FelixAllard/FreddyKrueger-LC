@@ -82,6 +82,8 @@ public class FreddyAI : EnemyAI
     public AudioSource oneShotCreature;
     public AudioSource feet1;
     public AudioSource feet2;
+    public ParticleSystem freddyRain;
+    public ParticleSystem freddyTeleport;
     
     
     
@@ -134,6 +136,8 @@ public class FreddyAI : EnemyAI
     public override void Start()
     {
         base.Start();
+        creatureVoice.volume = 0f;
+        
         _enterSleep = 50;
         _maxSleep = 150;
         _inCoroutine = false;
@@ -162,6 +166,8 @@ public class FreddyAI : EnemyAI
         //_clientReceiveSleepArray.OnReceived += ActualiseClientSleep; ADD SECOND METHOD TO CALLING
         //Behavior SEND Int
         _clientID = RoundManager.Instance.playersManager.localPlayerController.GetClientId();
+        freddyRain.Stop();
+        freddyTeleport.Stop();
     }
 
     public void ReinitialiseList()
@@ -263,12 +269,12 @@ public class FreddyAI : EnemyAI
             case (int)State.Spawning:
                 if (_targetPlayer)
                 {
-                    agent.speed = 0;
+                    agent.speed = 0f;
                     IdleFreddy();
-                    DoAnimationClientRpc("Teleport");
+                    
                     if (IsHost)
                     {
-                        _footStepIntervale = 9999;
+                        _footStepIntervale = 999.0;
                         _timerFootstep = 000;
                     }
                     if (IsHost)
@@ -283,7 +289,7 @@ public class FreddyAI : EnemyAI
                 if (_justSwitchedBehaviour)
                 {
                     agent.acceleration = 8;
-                    TeleportRandomlyAroundPlayerClientRpc(20, 25);
+                    TeleportRandomlyAroundPlayer(20, 25);
                     IdleFreddy();
                     DoAnimationClientRpc("Walking",true);
                     if (IsHost)
@@ -310,7 +316,7 @@ public class FreddyAI : EnemyAI
                 {
                     agent.acceleration = 8;
                     
-                    TeleportRandomlyAroundPlayerClientRpc(20, 30);
+                    TeleportRandomlyAroundPlayer(20, 30);
                     IdleFreddy();
                     DoAnimationClientRpc("Running",true);
                     if (IsHost)
@@ -337,7 +343,7 @@ public class FreddyAI : EnemyAI
 
                     float _minTeleport = (40-(_targetPlayerSleep.SleepMeter-_maxSleep));
                     float _maxTeleport = ((40 - (_targetPlayerSleep.SleepMeter - _maxSleep)) / 2) * 3;
-                    TeleportRandomlyAroundPlayerClientRpc((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
+                    TeleportRandomlyAroundPlayer((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                     IdleFreddy();
                     DoAnimationClientRpc("RunWithClaw",true);
                     if (IsHost)
@@ -359,7 +365,7 @@ public class FreddyAI : EnemyAI
                 if (_justSwitchedBehaviour)
                 {
                     agent.acceleration = 8;
-                    TeleportRandomlyAroundPlayerClientRpc(15, 20);
+                    TeleportRandomlyAroundPlayer(15, 20);
                     IdleFreddy();
                     agent.speed = 3f;
                     DoAnimationClientRpc("Sneaking", true);
@@ -750,8 +756,7 @@ public class FreddyAI : EnemyAI
         // Either there's no path or the path is invalid
         return false;
     }
-    [ClientRpc]
-    public void TeleportRandomlyAroundPlayerClientRpc(float minTeleportDistance, float maxTeleportDistance)
+    public void TeleportRandomlyAroundPlayer(float minTeleportDistance, float maxTeleportDistance)
     {
         Debug.Log("Just Tried teleporting!");
         if (_targetPlayer != null)
@@ -791,8 +796,10 @@ public class FreddyAI : EnemyAI
                 // Check if there's a path from teleport position to player position
                 if (CanReach(teleportPosition, _targetPlayer.transform.position))
                 {
+                    freddyTeleport.Play();
+                    
                     Debug.Log("WARPING--------------------------------------------------");
-                    agent.Warp(teleportPosition);
+                    StartCoroutine(ExecuteTeleportFreddy(teleportPosition));
                     return;
                 }
 
@@ -805,6 +812,23 @@ public class FreddyAI : EnemyAI
 
         // No target player, teleportation not possible
         return;
+    }
+
+    IEnumerator ExecuteTeleportFreddy(Vector3 position)
+    {
+        yield return new WaitForSeconds(1.0f);
+        TeleportExecuteClientRpc(position);
+    }
+    
+
+    [ClientRpc]
+    public void TeleportExecuteClientRpc(Vector3 position)
+    {
+        agent.Warp(position);
+        if (IsHost)
+        {
+            DoAnimationClientRpc("Teleport");
+        }
     }
 
     //Voice Logic
@@ -946,6 +970,7 @@ public class FreddyAI : EnemyAI
             else
             {
                 creatureSFX.Stop();
+                freddyRain.Stop();
             }
            
         }
@@ -955,11 +980,15 @@ public class FreddyAI : EnemyAI
             EnableEnemyMesh(enable);
             if (enable == true)
             {
-                creatureVoice.mute = false;
+                creatureVoice.volume += 0.1f;
+                freddyRain.Play();
+                
             }
             else
             {
-                creatureVoice.mute = true;
+                //creatureVoice.mute = true;
+                freddyRain.Stop();
+                creatureVoice.volume -= 0.2f;
                 
             }
         }
@@ -1109,6 +1138,18 @@ public class FreddyAI : EnemyAI
         else
         {
             _indexSleepArraySleep = -1;
+        }
+    }
+
+    [ClientRpc]
+    private void TeleportationParticleClientRpc()
+    {
+        if (_indexSleepArraySleep != -1 && _playerSleep != null)
+        {
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
+            {
+                freddyTeleport.Play();
+            }
         }
     }
     [ClientRpc]
