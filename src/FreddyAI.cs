@@ -83,6 +83,8 @@ public class FreddyAI : EnemyAI
     public AudioSource feet1;
     public AudioSource feet2;
     
+    
+    
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
 
@@ -117,6 +119,8 @@ public class FreddyAI : EnemyAI
     private int _enterSleep;
     private int _maxSleep;
     private bool _freddyVisible;
+
+    private double _footStepIntervale;
 
 
     enum State {
@@ -191,8 +195,10 @@ public class FreddyAI : EnemyAI
     }
 
     [NonSerialized] private double _timer =0;
+    [NonSerialized] private double _timerFootstep = 0;
     private bool _setFirstBehaviour = false;
     private bool _inCoroutine;
+    private bool _footStepRight = true;
 
 
     public override void Update()
@@ -204,13 +210,41 @@ public class FreddyAI : EnemyAI
             _timer += Time.deltaTime;
             if (_timer >= 1)
             {
-                
                 UpdateSleep();
                 _timer = 0;
             }
+            //Footstep interval handler
+            _timerFootstep += Time.deltaTime;
+            if (_timerFootstep >= _footStepIntervale)
+            {
+                DoAIStepIntervalClientRpc();
+                _timerFootstep = 0;
+            }
+
+
+
+        }
+        
+        
+    }
+    
+    [ClientRpc]
+    public void DoAIStepIntervalClientRpc()
+    {
+        if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
+        {
+            if (_footStepRight)
+            {
+                feet1.Play();
+                _footStepRight = false;
+            }
+            else
+            {
+                feet2.Play();
+                _footStepRight = true;
+            }
         }
     }
-
     public override void DoAIInterval()
     {
         base.DoAIInterval();
@@ -241,6 +275,11 @@ public class FreddyAI : EnemyAI
                     TeleportRandomlyAroundPlayerClientRpc(20, 25);
                     IdleFreddy();
                     DoAnimationClientRpc("Walking",true);
+                    if (IsHost)
+                    {
+                        _footStepIntervale = 0.675;
+                        _timerFootstep = 0.675;
+                    }
                     agent.speed = 3f;
                     _justSwitchedBehaviour = false;
                     if (!_inCoroutine)
@@ -263,6 +302,11 @@ public class FreddyAI : EnemyAI
                     TeleportRandomlyAroundPlayerClientRpc(20, 30);
                     IdleFreddy();
                     DoAnimationClientRpc("Running",true);
+                    if (IsHost)
+                    {
+                        _footStepIntervale = 0.3665;
+                        _timerFootstep = 0.3665;
+                    }
                     agent.speed = 7f;
                     _justSwitchedBehaviour = false;
                     if (!_inCoroutine)
@@ -285,6 +329,11 @@ public class FreddyAI : EnemyAI
                     TeleportRandomlyAroundPlayerClientRpc((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                     IdleFreddy();
                     DoAnimationClientRpc("RunWithClaw",true);
+                    if (IsHost)
+                    {
+                        _footStepIntervale = 0.3665;
+                        _timerFootstep = 0.3665;
+                    }
                     agent.speed = 6;
                     
                     _justSwitchedBehaviour = false;
@@ -303,6 +352,11 @@ public class FreddyAI : EnemyAI
                     IdleFreddy();
                     agent.speed = 3f;
                     DoAnimationClientRpc("Sneaking", true);
+                    if (IsHost)
+                    {
+                        _footStepIntervale = 1.8;
+                        _timerFootstep = 1.8;
+                    }
                     _justSwitchedBehaviour = false;
                     agent.acceleration = 0;
                 }
@@ -662,6 +716,7 @@ public class FreddyAI : EnemyAI
     //Also Assign target Player
     private void IdleFreddy()
     {
+        
         DoAnimationClientRpc("Running",false);
         DoAnimationClientRpc("Walking",false);
         DoAnimationClientRpc("RunWithClaw",false);
@@ -1055,7 +1110,6 @@ public class FreddyAI : EnemyAI
     [ClientRpc]
     public void SwingAttackHitClientRpc()
     {
-        Debug.Log("Freddy met collision rules with player");
         int playerLayer = 1 << 3; // Assuming the layer for players is 3, adjust accordingly
         Collider[] hitColliders = Physics.OverlapBox(attackArea.position, attackArea.localScale, Quaternion.identity, playerLayer);
         if (hitColliders.Length > 0)
