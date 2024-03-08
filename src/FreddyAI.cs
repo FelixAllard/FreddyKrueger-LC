@@ -25,11 +25,10 @@ using UnityEngine.Rendering;
 [Serializable]
 public class PlayerSleep
 {
-    public PlayerSleep(ulong clientID, int sleepMeter, bool isTargetPlayer)
+    public PlayerSleep(ulong clientID, int sleepMeter)
     {
         this.clientID = clientID;
         this.sleepMeter = sleepMeter;
-        this.isTargetPlayer = isTargetPlayer;
         this.targetPoint = 0;
     }
     public PlayerSleep()
@@ -47,12 +46,6 @@ public class PlayerSleep
         get => sleepMeter;
         set => sleepMeter = value;
     }
-
-    public bool IsTargetPlayer
-    {
-        get => isTargetPlayer;
-        set => isTargetPlayer = value;
-    }
     public int TargetPoint
     {
         get => targetPoint;
@@ -60,7 +53,6 @@ public class PlayerSleep
     }
     public ulong clientID;
     public int sleepMeter;
-    public bool isTargetPlayer;
     public int targetPoint;
 }
 
@@ -176,8 +168,7 @@ public class FreddyAI : EnemyAI
             {
                 playerSleepServ.Add(new PlayerSleep(
                     t.GetClientId(), 
-                    0, 
-                    false
+                    0
                 ));
             }
         }
@@ -251,7 +242,7 @@ public class FreddyAI : EnemyAI
                     Debug.Log("Do we ave a behaviour?" +
                               "");
                     agent.acceleration = 8;
-                    TeleportRandomlyAroundPlayer(20, 25);
+                    TeleportRandomlyAroundPlayerClientRpc(20, 25);
                     IdleFreddy();
                     DoAnimationClientRpc("Walking",true);
                     agent.speed = 3f;
@@ -273,7 +264,7 @@ public class FreddyAI : EnemyAI
                 {
                     agent.acceleration = 8;
                     
-                    TeleportRandomlyAroundPlayer(20, 30);
+                    TeleportRandomlyAroundPlayerClientRpc(20, 30);
                     IdleFreddy();
                     DoAnimationClientRpc("Running",true);
                     agent.speed = 7f;
@@ -295,7 +286,7 @@ public class FreddyAI : EnemyAI
 
                     float _minTeleport = (40-(_targetPlayerSleep.SleepMeter-_maxSleep));
                     float _maxTeleport = ((40 - (_targetPlayerSleep.SleepMeter - _maxSleep)) / 2) * 3;
-                    TeleportRandomlyAroundPlayer((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
+                    TeleportRandomlyAroundPlayerClientRpc((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                     IdleFreddy();
                     DoAnimationClientRpc("RunWithClaw",true);
                     agent.speed = 6;
@@ -312,7 +303,7 @@ public class FreddyAI : EnemyAI
                 if (_justSwitchedBehaviour)
                 {
                     agent.acceleration = 8;
-                    TeleportRandomlyAroundPlayer(15, 20);
+                    TeleportRandomlyAroundPlayerClientRpc(15, 20);
                     IdleFreddy();
                     agent.speed = 3f;
                     DoAnimationClientRpc("Sneaking", true);
@@ -394,7 +385,10 @@ public class FreddyAI : EnemyAI
     
     public void UpdateSleep()
     {
-        CheckIfMissingPlayer();
+        if (_playerSleep != null)
+        {
+            CheckIfMissingPlayer();
+        }
         for (int count = 0; count < playerSleepServ.Count; count++)
         {
             PlayerControllerB player = playerSleepServ[count].ClientID.GetPlayerController();
@@ -562,25 +556,35 @@ public class FreddyAI : EnemyAI
             }
             */
         }
+        //OLD CODE FOR CHOOSING TARGET
         //Target player Becomes true for the target player and false for the rest
-        foreach (var player in playerSleepServ)
-        { 
-            if (player.ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
+        bool targetPlayerExistent = false;
+        for (int count = 0; count < playerSleepServ.Count; count++)
+        {
+            if (playerSleepServ[count].ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
             {
-                player.IsTargetPlayer = true;
+                SetTargetPlayerClientRpc(count);
+                targetPlayerExistent = true;
                 
                 if (!_setFirstBehaviour)
                 {
                     Debug.Log("Setting first behaviour!");
                     _setFirstBehaviour = true;
+                    
                     SetBehavior();
                 }
             }
             else
             {
-                player.IsTargetPlayer = false;
             }
         }
+
+        if (!targetPlayerExistent)
+        {
+            SetTargetPlayerClientRpc(-1);
+        }
+
+        
     }
     public void SetBehavior()
     {
@@ -684,8 +688,8 @@ public class FreddyAI : EnemyAI
         // Either there's no path or the path is invalid
         return false;
     }
-
-    public bool TeleportRandomlyAroundPlayer(float minTeleportDistance, float maxTeleportDistance)
+    [ClientRpc]
+    public bool TeleportRandomlyAroundPlayerClientRpc(float minTeleportDistance, float maxTeleportDistance)
     {
         Debug.Log("Just Tried teleporting!");
         if (_targetPlayer != null)
@@ -834,44 +838,52 @@ public class FreddyAI : EnemyAI
         //FREDDY Stage local handler
         private void LocalPlayerFreddyHandler()
         {
-            if(_targetPlayer!=null && !_targetPlayer.isPlayerControlled)
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
+            if (_indexSleepArraySleep != -1)
             {
-                //Currently FOrce Loaded
-                //enterTheDream.LoadAudioData();
-            }
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
-            {
-                creatureSFX.PlayOneShot(enterTheDream);
-                //Currently Force Loaded
-                //terminus.LoadAudioData();
-            }
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
-            {
-                EnemyMeshAndPerson(true);
-                if (!creatureSFX.isPlaying)
+                if(_targetPlayer!=null && !_targetPlayer.isPlayerControlled)
+                    if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
+                    {
+                        //Currently FOrce Loaded
+                        //enterTheDream.LoadAudioData();
+                    }
+                if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
                 {
-                    creatureSFX.Play();
+                    creatureSFX.PlayOneShot(enterTheDream);
+                    //Currently Force Loaded
+                    //terminus.LoadAudioData();
                 }
+                if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
+                {
+                    EnemyMeshAndPerson(true);
+                    if (!creatureSFX.isPlaying)
+                    {
+                        creatureSFX.Play();
+                    }
                 
+                }
+                else
+                {
+                    EnemyMeshAndPerson(false);
+                    if (!creatureSFX.isPlaying)
+                    {
+                        //TODO implement fade volume
+                        creatureSFX.Stop();
+                    }
+                }
+                if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
+                {
+                    creatureSFX.PlayOneShot(terminus);
+                }
+                else if (_playerSleep[_indexSleepArraySleep].SleepMeter < _maxSleep-80)
+                {
+                    oneShotCreature.Stop();
+                }
             }
             else
             {
-                EnemyMeshAndPerson(false);
-                if (!creatureSFX.isPlaying)
-                {
-                    //TODO implement fade volume
-                    creatureSFX.Stop();
-                }
+                creatureSFX.Stop();
             }
-            if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
-            {
-                creatureSFX.PlayOneShot(terminus);
-            }
-            else if (_playerSleep[_indexSleepArraySleep].SleepMeter < _maxSleep-80)
-            {
-                oneShotCreature.Stop();
-            }
+           
         }
 
         public void EnemyMeshAndPerson(bool enable)
@@ -975,18 +987,15 @@ public class FreddyAI : EnemyAI
         
     
     //MESSAGE HANDLER LOGIC
-    //TODO Stop it from running 2 times for ntg
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
         _playerSleep = x;
+        LocalPlayerFreddyHandler();
         if (_indexSleepArraySleep == -1)
         {
             FindMeInArray();
         }
-        else
-        {
-            LocalPlayerFreddyHandler();
-        }
+        
     }
     
     private AudioSource FindAudioSourceInChildren(Transform parent, string name)
@@ -1010,24 +1019,30 @@ public class FreddyAI : EnemyAI
     }
     private void FindMeInArray()
     {
-        var count = 0;
-        foreach (var player in _playerSleep)
+        if (!RoundManager.Instance.playersManager.localPlayerController.isPlayerDead)
         {
-
-            //Handle if LocalPlayer = Target player
-            if (player.ClientID == _clientID)
+            var count = 0;
+            foreach (var player in _playerSleep)
             {
-                //Add the array number of the local player too indexSleepArraySleep
-                if (_indexSleepArraySleep == -1)
+                //Handle if LocalPlayer = Target player
+                if (player.ClientID == _clientID)
                 {
-                    _indexSleepArraySleep = count;
+                    //Add the array number of the local player too indexSleepArraySleep
+                    if (_indexSleepArraySleep == -1)
+                    {
+                        _indexSleepArraySleep = count;
+                    }
+                }
+
+                if (_targetPlayer.GetClientId() == player.ClientID)
+                {
+                    _indexSleepArrayTarget = count;
                 }
             }
-
-            if (_targetPlayer.GetClientId() == player.ClientID)
-            {
-                _indexSleepArrayTarget = count;
-            }
+        }
+        else
+        {
+            _indexSleepArraySleep = -1;
         }
     }
     [ClientRpc]
@@ -1063,11 +1078,22 @@ public class FreddyAI : EnemyAI
         }
     }
     [ClientRpc]
-    public void SetTargetPlayerClientRpc(int playerIndex, PlayerControllerB playerControllerB)
+    public void SetTargetPlayerClientRpc(int playerIndex)
     {
-        _targetPlayer = playerControllerB;
-        _indexSleepArrayTarget = playerIndex;
+        if (playerIndex != -1)
+        {
+            _targetPlayer = _playerSleep[playerIndex].clientID.GetPlayerController();
+            _indexSleepArrayTarget = playerIndex;
+            _targetPlayerSleep = _playerSleep[playerIndex];
+        }
+        else
+        {
+            _targetPlayer = null;
+            _indexSleepArraySleep = -1;
+        }
+        
     }
+
     [ClientRpc]
     public void DoAnimationClientRpc(string animationName, bool setActive)
     {
