@@ -840,12 +840,14 @@ public class FreddyAI : EnemyAI
         {
             if (_indexSleepArraySleep != -1 && !RoundManager.Instance.playersManager.localPlayerController.isPlayerDead)
             {
-                if(_targetPlayer!=null && !_targetPlayer.isPlayerControlled)
+                if (_targetPlayer != null && !_targetPlayer.isPlayerControlled)
+                {
                     if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
                     {
                         //Currently FOrce Loaded
                         //enterTheDream.LoadAudioData();
                     }
+                }
                 if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
                 {
                     creatureSFX.PlayOneShot(enterTheDream);
@@ -992,9 +994,10 @@ public class FreddyAI : EnemyAI
         }
         else
         {
-            LocalPlayerFreddyHandler();
+            
             Debug.Log(_playerSleep[_indexSleepArraySleep].SleepMeter);
         }
+        LocalPlayerFreddyHandler();
         
         
     }
@@ -1020,30 +1023,32 @@ public class FreddyAI : EnemyAI
     }
     private void FindMeInArray()
     {
-        if (!RoundManager.Instance.playersManager.localPlayerController.isPlayerDead && _playerSleep !=null && _targetPlayer !=null)
+        if (!RoundManager.Instance.playersManager.localPlayerController.isPlayerDead && _playerSleep !=null)
         {
             var count = 0;
             foreach (var player in _playerSleep)
             {
-                //Handle if LocalPlayer = Target player
                 if (player.ClientID == _clientID)
                 {
                     //Add the array number of the local player too indexSleepArraySleep
-                    if (_indexSleepArraySleep == -1)
+                    _indexSleepArraySleep = count;
+                }
+
+                if (_targetPlayer != null)
+                {
+                    if (_targetPlayer.GetClientId() == player.ClientID)
                     {
-                        _indexSleepArraySleep = count;
+                        _indexSleepArrayTarget = count;
                     }
                 }
 
-                if (_targetPlayer.GetClientId() == player.ClientID)
-                {
-                    _indexSleepArrayTarget = count;
-                }
+                count++;
             }
         }
         else
         {
             _indexSleepArraySleep = -1;
+            Debug.LogError("We have no player???");
         }
     }
     [ClientRpc]
@@ -1098,13 +1103,11 @@ public class FreddyAI : EnemyAI
     [ClientRpc]
     public void DoAnimationClientRpc(string animationName, bool setActive)
     {
-        LogIfDebugBuild($"Animation: {animationName}");
         creatureAnimator.SetBool(animationName,setActive);
     }
     [ClientRpc]
     public void DoAnimationClientRpc(string animationName)
     {
-        LogIfDebugBuild($"Animation: {animationName}");
         creatureAnimator.SetTrigger(animationName);
     }
     void LogIfDebugBuild(string text) {
