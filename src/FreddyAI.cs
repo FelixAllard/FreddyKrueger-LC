@@ -182,14 +182,17 @@ public class FreddyAI : EnemyAI
 
     public void CheckIfMissingPlayer()
     {
-        foreach (var player in _playerSleep)
+        if (_playerSleep.Count > 0)
         {
-            if (player.ClientID.GetPlayerController().isPlayerDead)
+            foreach (var player in _playerSleep)
             {
-                Debug.Log("Removing Player From array");
-                _playerSleep.Remove(player);
-                _serverMessageSleepArray.SendAllClients(_playerSleep);
-                ResetIndexForClientRpc();
+                if (player.ClientID.GetPlayerController().isPlayerDead)
+                {
+                    Debug.Log("Removing Player From array");
+                    _playerSleep.Remove(player);
+                    _serverMessageSleepArray.SendAllClients(_playerSleep);
+                    ResetIndexForClientRpc();
+                }
             }
         }
     }
@@ -231,17 +234,20 @@ public class FreddyAI : EnemyAI
     [ClientRpc]
     public void DoAIStepIntervalClientRpc()
     {
-        if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
+        if (_indexSleepArraySleep != -1)
         {
-            if (_footStepRight)
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
             {
-                feet1.Play();
-                _footStepRight = false;
-            }
-            else
-            {
-                feet2.Play();
-                _footStepRight = true;
+                if (_footStepRight)
+                {
+                    feet1.Play();
+                    _footStepRight = false;
+                }
+                else
+                {
+                    feet2.Play();
+                    _footStepRight = true;
+                }
             }
         }
     }
@@ -260,6 +266,11 @@ public class FreddyAI : EnemyAI
                     agent.speed = 0;
                     IdleFreddy();
                     DoAnimationClientRpc("Teleport");
+                    if (IsHost)
+                    {
+                        _footStepIntervale = 9999;
+                        _timerFootstep = 000;
+                    }
                     if (IsHost)
                     {
                         SetBehavior();
@@ -354,8 +365,8 @@ public class FreddyAI : EnemyAI
                     DoAnimationClientRpc("Sneaking", true);
                     if (IsHost)
                     {
-                        _footStepIntervale = 1.8;
-                        _timerFootstep = 1.8;
+                        _footStepIntervale = 99999;
+                        _timerFootstep = 0;
                     }
                     _justSwitchedBehaviour = false;
                     agent.acceleration = 0;
@@ -1046,7 +1057,6 @@ public class FreddyAI : EnemyAI
         else
         {
             
-            Debug.Log(_playerSleep[_indexSleepArraySleep].SleepMeter);
         }
         LocalPlayerFreddyHandler();
         
@@ -1099,7 +1109,6 @@ public class FreddyAI : EnemyAI
         else
         {
             _indexSleepArraySleep = -1;
-            Debug.LogError("We have no player???");
         }
     }
     [ClientRpc]
@@ -1124,6 +1133,7 @@ public class FreddyAI : EnemyAI
                     {
                         RandomLaughClientRpc();
                         playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Drowning,1);
+                        SwitchToBehaviourClientRpc(0);
                     }
                     else
                     {

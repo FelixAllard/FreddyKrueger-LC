@@ -107,7 +107,7 @@ namespace FreddyKrueger {
             {
                 if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
                 {
-                    RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1,
+                    RoundManager.Instance.SpawnEnemyGameObject(new Vector3(0f,200f,0f), 0f, +1,
                         Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
                 }
                 else
