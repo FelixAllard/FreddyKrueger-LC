@@ -75,11 +75,13 @@ public class FreddyAI : EnemyAI
     [FormerlySerializedAs("InTheNightmare")] public AudioClip inTheNightmare;
     [FormerlySerializedAs("EnterTheDream")] public AudioClip enterTheDream;
     [FormerlySerializedAs("Terminus")] public AudioClip terminus;
-    
+    public AudioClip footSound;
     //TRANSFORMER
     public Transform turnCompass;
     public Transform attackArea;
     public AudioSource oneShotCreature;
+    public AudioSource feet1;
+    public AudioSource feet2;
     
     //2D ARRAY 
     private List<PlayerSleep> _playerSleep;
@@ -221,26 +223,20 @@ public class FreddyAI : EnemyAI
             case (int)State.Spawning:
                 if (_targetPlayer)
                 {
-                    agent.acceleration = 0;
+                    agent.speed = 0;
                     IdleFreddy();
-                    
-                    _justSwitchedBehaviour = false;
                     DoAnimationClientRpc("Teleport");
                     if (IsHost)
                     {
                         SetBehavior();
                     }
-                    
                     _justSwitchedBehaviour = true;
                     StopCoroutine(WaitAndChangeBehavior(5f));
-
                 }
                 break;
             case (int)State.Walking:
                 if (_justSwitchedBehaviour)
                 {
-                    Debug.Log("Do we ave a behaviour?" +
-                              "");
                     agent.acceleration = 8;
                     TeleportRandomlyAroundPlayerClientRpc(20, 25);
                     IdleFreddy();
