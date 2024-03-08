@@ -1,3 +1,3 @@
-# Example Enemy
+# Freddy Krueger - [New Enemy]
 
-This README file is for Thunderstore. Fill it out with information about your enemy!
+This mod adds Freddy Krueger from "Nightmare on Elm Street" as a fully animated and customised enemy. Freddy brings a special sleep mechanic and targets only players that are asleep while leaving the awake alone. This is the first every build of this mod and there will be a lot of updates upon this mod. If you want to talk to me, go on the official Lethal Company Modding server and give me feedback on any issues so I may fix them. I also gave a link to my Github if you want to inspire yourself from my code, which I don't suggest for I am quite the messy coder.

@@ -138,8 +138,8 @@ public class FreddyAI : EnemyAI
         base.Start();
         creatureVoice.volume = 0f;
         
-        _enterSleep = 50;
-        _maxSleep = 150;
+        _enterSleep = 260;
+        _maxSleep = 400;
         _inCoroutine = false;
         StartCoroutine(SeeIfAccessible());
         if (creatureVoice == null)
@@ -635,7 +635,6 @@ public class FreddyAI : EnemyAI
                 
                 if (!_setFirstBehaviour)
                 {
-                    Debug.Log("Setting first behaviour!");
                     _setFirstBehaviour = true;
                     
                     SetBehavior();
@@ -758,7 +757,6 @@ public class FreddyAI : EnemyAI
     }
     public void TeleportRandomlyAroundPlayer(float minTeleportDistance, float maxTeleportDistance)
     {
-        Debug.Log("Just Tried teleporting!");
         if (_targetPlayer != null)
         {
             int maxAttempts = 10;
@@ -766,7 +764,6 @@ public class FreddyAI : EnemyAI
 
             while (attempts < maxAttempts)
             {
-                Debug.Log("Attempt : " + attempts);
                 // Calculate a random angle around the player
                 float angle = Random.Range(0f, 360f);
 
@@ -797,8 +794,7 @@ public class FreddyAI : EnemyAI
                 if (CanReach(teleportPosition, _targetPlayer.transform.position))
                 {
                     freddyTeleport.Play();
-                    
-                    Debug.Log("WARPING--------------------------------------------------");
+                    RandomLaughClientRpc();
                     StartCoroutine(ExecuteTeleportFreddy(teleportPosition));
                     return;
                 }
@@ -996,7 +992,6 @@ public class FreddyAI : EnemyAI
         {
             if (skinnedMeshRenderers == null || meshRenderers == null)
             {
-                Debug.LogError("skinnedMeshRenderers or meshRenderers array is null.");
                 return;
             }
 
