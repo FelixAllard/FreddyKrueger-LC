@@ -689,7 +689,7 @@ public class FreddyAI : EnemyAI
         return false;
     }
     [ClientRpc]
-    public bool TeleportRandomlyAroundPlayerClientRpc(float minTeleportDistance, float maxTeleportDistance)
+    public void TeleportRandomlyAroundPlayerClientRpc(float minTeleportDistance, float maxTeleportDistance)
     {
         Debug.Log("Just Tried teleporting!");
         if (_targetPlayer != null)
@@ -731,18 +731,18 @@ public class FreddyAI : EnemyAI
                 {
                     Debug.Log("WARPING--------------------------------------------------");
                     agent.Warp(teleportPosition);
-                    return true;
+                    return;
                 }
 
                 attempts++;
             }
 
             // Failed to find a valid teleport position after max attempts
-            return false;
+            return;
         }
 
         // No target player, teleportation not possible
-        return false;
+        return;
     }
 
     //Voice Logic
@@ -838,7 +838,7 @@ public class FreddyAI : EnemyAI
         //FREDDY Stage local handler
         private void LocalPlayerFreddyHandler()
         {
-            if (_indexSleepArraySleep != -1)
+            if (_indexSleepArraySleep != -1 && !RoundManager.Instance.playersManager.localPlayerController.isPlayerDead)
             {
                 if(_targetPlayer!=null && !_targetPlayer.isPlayerControlled)
                     if (_playerSleep[_indexSleepArraySleep].SleepMeter == _enterSleep - 50)
@@ -979,22 +979,23 @@ public class FreddyAI : EnemyAI
             base.OnDestroy();
             _playerSleep = null;
             StopAllCoroutines();
-
         }
-
-
         //______________________________________________________//
-        
-    
     //MESSAGE HANDLER LOGIC
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
         _playerSleep = x;
-        LocalPlayerFreddyHandler();
         if (_indexSleepArraySleep == -1)
         {
             FindMeInArray();
+            
         }
+        else
+        {
+            LocalPlayerFreddyHandler();
+            Debug.Log(_playerSleep[_indexSleepArraySleep].SleepMeter);
+        }
+        
         
     }
     
@@ -1019,7 +1020,7 @@ public class FreddyAI : EnemyAI
     }
     private void FindMeInArray()
     {
-        if (!RoundManager.Instance.playersManager.localPlayerController.isPlayerDead)
+        if (!RoundManager.Instance.playersManager.localPlayerController.isPlayerDead && _playerSleep !=null && _targetPlayer !=null)
         {
             var count = 0;
             foreach (var player in _playerSleep)
