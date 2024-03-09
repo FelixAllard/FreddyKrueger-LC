@@ -11,14 +11,18 @@ using BepInEx.Logging;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using GameNetcodeStuff;
+
 
 namespace FreddyKrueger {
     //Yup! Forgor to put this here
     [BepInDependency("LethalNetworkAPI")]
+    [BepInDependency("com.sigurd.csync")] 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency(LethalLib.Plugin.ModGUID)] 
     public class Plugin : BaseUnityPlugin
     {
+        
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         public static EnemyType ExampleEnemy;
         internal static new ManualLogSource Logger;
@@ -159,5 +163,9 @@ namespace FreddyKrueger {
             }
             return false;
         }
+        
     }
+    
+    
+    
 }

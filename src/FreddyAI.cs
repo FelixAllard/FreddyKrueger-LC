@@ -132,14 +132,30 @@ public class FreddyAI : EnemyAI
         RunningClaw, 
         Sneaking
     }
-    
+
+    public void Awake()
+    {
+
+        _enterSleep = 260;//Config.Instance.ENTER_SLEEP.Value;
+        _maxSleep = 400;//Config.Instance.SLEEP_MAX.Value;
+        if (_enterSleep == null)
+        {
+            if (_enterSleep <= 49)
+            {
+                _enterSleep = 50;
+            }
+
+            if (_maxSleep<= _enterSleep+80)
+            {
+                _maxSleep = _enterSleep + 80;
+            }
+        }
+    }
+
     public override void Start()
     {
         base.Start();
         creatureVoice.volume = 0f;
-        
-        _enterSleep = 260;
-        _maxSleep = 400;
         _inCoroutine = false;
         StartCoroutine(SeeIfAccessible());
         if (creatureVoice == null)
@@ -184,6 +200,17 @@ public class FreddyAI : EnemyAI
                 ));
             }
         }
+
+        RemoveRemnantsClientRpc();
+    }
+    [ClientRpc]
+    private void RemoveRemnantsClientRpc()
+    {
+        creatureVoice.Stop();
+        creatureSFX.Stop();
+        SetDestinationToPosition(transform.position);
+        IdleFreddy();
+        _targetPlayer = null;
     }
 
     public void CheckIfMissingPlayer()
@@ -213,7 +240,8 @@ public class FreddyAI : EnemyAI
     public override void Update()
     {
         base.Update();
-        
+        Debug.Log(_enterSleep);
+        Debug.Log(_maxSleep);
         if (IsHost)
         {
             _timer += Time.deltaTime;
@@ -452,6 +480,7 @@ public class FreddyAI : EnemyAI
     
     public void UpdateSleep()
     {
+        Debug.Log("In Update sleep");
         if (_playerSleep != null)
         {
             CheckIfMissingPlayer();
@@ -499,6 +528,7 @@ public class FreddyAI : EnemyAI
                 ChooseTarget();
             }
         }
+        Debug.Log("Sending the message!");
         //Sending computation to all clients
         _serverMessageSleepArray.SendAllClients(playerSleepServ);
     }
@@ -553,101 +583,105 @@ public class FreddyAI : EnemyAI
         {
             possibleTarget[count].TargetPoint += (5 - count);
         }
-        foreach (var player in possibleTarget)
+
+        if (possibleTarget.Count != 0 && _playerSleep != null) 
         {
-            PlayerControllerB spaceRamPlayerHandler= player.ClientID.GetPlayerController();
-            if (spaceRamPlayerHandler.isInsideFactory)
+            foreach (var player in possibleTarget)
             {
-                player.TargetPoint += 3;
-            }
-            if (spaceRamPlayerHandler.criticallyInjured)
-            {
-                player.TargetPoint += 5;
-            }
+                PlayerControllerB spaceRamPlayerHandler= player.ClientID.GetPlayerController();
+                if (spaceRamPlayerHandler.isInsideFactory)
+                {
+                    player.TargetPoint += 3;
+                }
+                if (spaceRamPlayerHandler.criticallyInjured)
+                {
+                    player.TargetPoint += 5;
+                }
 
-            if (CheckIfAlone(spaceRamPlayerHandler))
-            {
-                player.TargetPoint += 7;
-            }
+                if (CheckIfAlone(spaceRamPlayerHandler))
+                {
+                    player.TargetPoint += 7;
+                }
 
-            if (spaceRamPlayerHandler.isInHangarShipRoom)
-            {
-                player.TargetPoint -= 3;
-            }
+                if (spaceRamPlayerHandler.isInHangarShipRoom)
+                {
+                    player.TargetPoint -= 3;
+                }
 
-            if (spaceRamPlayerHandler.carryWeight >= 50)
-            {
-                player.TargetPoint += 2;
-            }
-            if (spaceRamPlayerHandler.carryWeight >= 100)
-            {
-                player.TargetPoint += 2;
-            }
+                if (spaceRamPlayerHandler.carryWeight >= 50)
+                {
+                    player.TargetPoint += 2;
+                }
+                if (spaceRamPlayerHandler.carryWeight >= 100)
+                {
+                    player.TargetPoint += 2;
+                }
 
-            if (spaceRamPlayerHandler.carryWeight == 0)
-            {
-                player.TargetPoint -= 2;
-            }
+                if (spaceRamPlayerHandler.carryWeight == 0)
+                {
+                    player.TargetPoint -= 2;
+                }
 
-            if (player.TargetPoint > highestSleepPoints.TargetPoint)
-            {
-                highestSleepPoints = player;
-            }
-            //TODO Implement proper EQUAL POINTS behaviour
-            /*
-            else if(player.TargetPoint == highestSleepPoints.TargetPoint)
-            {
-                if (player.IsTargetPlayer)
+                if (player.TargetPoint > highestSleepPoints.TargetPoint)
                 {
                     highestSleepPoints = player;
                 }
-                else if (highestSleepPoints.IsTargetPlayer)
+                //TODO Implement proper EQUAL POINTS behaviour
+                /*
+                else if(player.TargetPoint == highestSleepPoints.TargetPoint)
                 {
-                    //DO NOTHING
-                }
-                else if (!player.IsTargetPlayer && !highestSleepPoints.IsTargetPlayer)
-                {
-                    switch (RandomNumberGenerator.GetInt32(0, 2))
+                    if (player.IsTargetPlayer)
                     {
-                        case 0:
-                            highestSleepPoints = player;
-                            break;
-                        case 1:
-                            //NOTHING
-                            break;
-                        default:
-                            break;
+                        highestSleepPoints = player;
+                    }
+                    else if (highestSleepPoints.IsTargetPlayer)
+                    {
+                        //DO NOTHING
+                    }
+                    else if (!player.IsTargetPlayer && !highestSleepPoints.IsTargetPlayer)
+                    {
+                        switch (RandomNumberGenerator.GetInt32(0, 2))
+                        {
+                            case 0:
+                                highestSleepPoints = player;
+                                break;
+                            case 1:
+                                //NOTHING
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    
+                }
+                */
+            }
+            //OLD CODE FOR CHOOSING TARGET
+            //Target player Becomes true for the target player and false for the rest
+            bool targetPlayerExistent = false;
+            for (int count = 0; count < playerSleepServ.Count; count++)
+            {
+                if (playerSleepServ[count].ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
+                {
+                    SetTargetPlayerClientRpc(count);
+                    targetPlayerExistent = true;
+                    
+                    if (!_setFirstBehaviour)
+                    {
+                        _setFirstBehaviour = true;
+                        
+                        SetBehavior();
                     }
                 }
-                
-            }
-            */
-        }
-        //OLD CODE FOR CHOOSING TARGET
-        //Target player Becomes true for the target player and false for the rest
-        bool targetPlayerExistent = false;
-        for (int count = 0; count < playerSleepServ.Count; count++)
-        {
-            if (playerSleepServ[count].ClientID == highestSleepPoints.ClientID && highestSleepPoints.ClientID!=9999999999)
-            {
-                SetTargetPlayerClientRpc(count);
-                targetPlayerExistent = true;
-                
-                if (!_setFirstBehaviour)
+                else
                 {
-                    _setFirstBehaviour = true;
-                    
-                    SetBehavior();
                 }
             }
-            else
-            {
-            }
-        }
 
-        if (!targetPlayerExistent)
-        {
-            SetTargetPlayerClientRpc(-1);
+            if (!targetPlayerExistent)
+            {
+                SetTargetPlayerClientRpc(-1);
+            }
         }
 
         
@@ -979,6 +1013,7 @@ public class FreddyAI : EnemyAI
                 creatureVoice.volume += 0.1f;
                 freddyRain.Play();
                 
+                
             }
             else
             {
@@ -1001,6 +1036,8 @@ public class FreddyAI : EnemyAI
                 if (renderer != null && (!renderer.CompareTag("DoNotSet") || overrideDoNotSet))
                 {
                     renderer.gameObject.layer = num;
+                    renderer.enabled = enable;
+
                 }
             }
             foreach (var renderer in meshRenderers)
@@ -1008,6 +1045,7 @@ public class FreddyAI : EnemyAI
                 if (renderer != null && (!renderer.CompareTag("DoNotSet") || overrideDoNotSet))
                 {
                     renderer.gameObject.layer = num;
+                    renderer.enabled = enable;
                 }
             }
         }
@@ -1073,6 +1111,7 @@ public class FreddyAI : EnemyAI
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
         _playerSleep = x;
+        Debug.Log(_playerSleep[0].sleepMeter);
         if (_indexSleepArraySleep == -1)
         {
             FindMeInArray();
@@ -1191,7 +1230,6 @@ public class FreddyAI : EnemyAI
         else
         {
             _targetPlayer = null;
-            _indexSleepArraySleep = -1;
         }
         
     }

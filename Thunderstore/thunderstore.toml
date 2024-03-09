@@ -1,5 +1,5 @@
 [config]
-schemaVersion = "0.0.2"
+schemaVersion = "0.0.1"
 
 [general]
 repository = "https://thunderstore.io"
@@ -13,6 +13,7 @@ BepInEx-BepInExPack = "5.4.2100"
 Evaisa-LethalLib = "0.14.2"
 xilophor-LethalNetworkAPI = "2.1.6"
 Lordfirespeed-OdinSerializer = "2022.11.9"
+Sigurd-CSync = "3.1.1"
 
 [build]
 icon = "./icon.png"
