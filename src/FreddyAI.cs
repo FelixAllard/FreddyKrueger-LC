@@ -19,6 +19,7 @@ using UnityEngine.AI;
 using Random = UnityEngine.Random;
 using UnityEngine.Rendering;
 //COMPONENTS IMPORTS
+//TODO Prevent him from taking damage
 
 
 //PLAYER CLASS
@@ -123,7 +124,7 @@ public class FreddyAI : EnemyAI
     private bool _freddyVisible;
 
     private double _footStepIntervale;
-
+    
 
     enum State {
         Spawning,
@@ -135,9 +136,8 @@ public class FreddyAI : EnemyAI
 
     public void Awake()
     {
-
-        _enterSleep = 260;//Config.Instance.ENTER_SLEEP.Value;
-        _maxSleep = 400;//Config.Instance.SLEEP_MAX.Value;
+        _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
+        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
         if (_enterSleep == null)
         {
             if (_enterSleep <= 49)
@@ -150,6 +150,8 @@ public class FreddyAI : EnemyAI
                 _maxSleep = _enterSleep + 80;
             }
         }
+
+       
     }
 
     public override void Start()
@@ -200,35 +202,54 @@ public class FreddyAI : EnemyAI
                 ));
             }
         }
+        Vector3 newPosition = new Vector3(82f,2f,55f);
+        RemoveRemnantsClientRpc(newPosition);
 
-        RemoveRemnantsClientRpc();
+        // Set the new position with the specified height
+        
+
+        // Teleport the object to the new position
+        
     }
     [ClientRpc]
-    private void RemoveRemnantsClientRpc()
+    private void RemoveRemnantsClientRpc(Vector3 newPosition)
     {
         creatureVoice.Stop();
         creatureSFX.Stop();
         SetDestinationToPosition(transform.position);
         IdleFreddy();
         _targetPlayer = null;
+        EnemyMeshAndPerson(false);
+        
+        transform.position = newPosition;
     }
 
     public void CheckIfMissingPlayer()
     {
-        if (_playerSleep.Count > 0)
+        if (playerSleepServ.Count >0)
         {
-            foreach (var player in _playerSleep)
+            try
             {
-                if (player.ClientID.GetPlayerController().isPlayerDead)
+                foreach (var player in playerSleepServ)
                 {
-                    Debug.Log("Removing Player From array");
-                    _playerSleep.Remove(player);
-                    _serverMessageSleepArray.SendAllClients(_playerSleep);
-                    ResetIndexForClientRpc();
+                    if (player.ClientID.GetPlayerController().isPlayerDead)
+                    {
+                        Debug.Log("Removing Player From array");
+                        playerSleepServ.Remove(player);
+                        _serverMessageSleepArray.SendAllClients(playerSleepServ);
+                        ResetIndexForClientRpc();
+                        Debug.Log("Possible target = " + playerSleepServ);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Debug.Log("Removing player");
+            }
+            
         }
     }
+    //TODO implement a Other player invisible behaviour
 
     [NonSerialized] private double _timer =0;
     [NonSerialized] private double _timerFootstep = 0;
@@ -240,8 +261,6 @@ public class FreddyAI : EnemyAI
     public override void Update()
     {
         base.Update();
-        Debug.Log(_enterSleep);
-        Debug.Log(_maxSleep);
         if (IsHost)
         {
             _timer += Time.deltaTime;
@@ -480,8 +499,7 @@ public class FreddyAI : EnemyAI
     
     public void UpdateSleep()
     {
-        Debug.Log("In Update sleep");
-        if (_playerSleep != null)
+        if (playerSleepServ != null)
         {
             CheckIfMissingPlayer();
         }
@@ -528,7 +546,6 @@ public class FreddyAI : EnemyAI
                 ChooseTarget();
             }
         }
-        Debug.Log("Sending the message!");
         //Sending computation to all clients
         _serverMessageSleepArray.SendAllClients(playerSleepServ);
     }
@@ -828,7 +845,7 @@ public class FreddyAI : EnemyAI
                 if (CanReach(teleportPosition, _targetPlayer.transform.position))
                 {
                     freddyTeleport.Play();
-                    RandomLaughClientRpc();
+                    
                     StartCoroutine(ExecuteTeleportFreddy(teleportPosition));
                     return;
                 }
@@ -858,7 +875,9 @@ public class FreddyAI : EnemyAI
         if (IsHost)
         {
             DoAnimationClientRpc("Teleport");
+            RandomLaughClientRpc();
         }
+        
     }
 
     //Voice Logic
@@ -1011,7 +1030,11 @@ public class FreddyAI : EnemyAI
             if (enable == true)
             {
                 creatureVoice.volume += 0.1f;
-                freddyRain.Play();
+                if (!freddyRain.isPlaying)
+                {
+                    freddyRain.Play();
+                }
+                
                 
                 
             }
@@ -1023,6 +1046,7 @@ public class FreddyAI : EnemyAI
                 
             }
         }
+    
         public override void EnableEnemyMesh(bool enable, bool overrideDoNotSet = false)
         {
             if (skinnedMeshRenderers == null || meshRenderers == null)
@@ -1070,35 +1094,6 @@ public class FreddyAI : EnemyAI
                 }
             }
         }
-    //FOOTSTEP SOUND WAY TO DO IT
-    
-        /*
-        public void SelectAndPlayFootstep()
-            {     
-                switch (currentTerrain)
-                {
-                    case CURRENT_TERRAIN.GRAVEL:
-                        PlayFootstep(1);
-                        break;
-        
-                    case CURRENT_TERRAIN.GRASS:
-                        PlayFootstep(0);
-                        break;
-        
-                    case CURRENT_TERRAIN.WOOD_FLOOR:
-                        PlayFootstep(2);
-                        break;
-        
-                    case CURRENT_TERRAIN.WATER:
-                        PlayFootstep(3);
-                        break;
-        
-                    default:
-                        PlayFootstep(0);
-                        break;
-                }
-            }
-        */
 
         public override void OnDestroy()
         {
@@ -1111,7 +1106,6 @@ public class FreddyAI : EnemyAI
     private void ActualiseClientSleep(List<PlayerSleep> x)
     {
         _playerSleep = x;
-        Debug.Log(_playerSleep[0].sleepMeter);
         if (_indexSleepArraySleep == -1)
         {
             FindMeInArray();

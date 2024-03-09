@@ -21,3 +21,10 @@ KNOWN ISSUE :
 -Model visible when exiting ship
 -Scan node doesn't bring anything to the terminal
 -When leaving the session and entering a new one without restarting game, freddy doesn't work
+
+CREDITS :
+The model was made by EWTube0
+https://skfb.ly/6ZFt8
+Most animation were taken from Mixamo free license
+Music taken from DBD and reverbed for better immersion
+

@@ -26,10 +26,13 @@ namespace FreddyKrueger {
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         public static EnemyType ExampleEnemy;
         internal static new ManualLogSource Logger;
+        private FreddyConfig _configuration;
 
         private void Awake() {
             Logger = base.Logger;
+            _configuration = new FreddyConfig(Config);
             Assets.PopulateAssets();
+            
 
             ExampleEnemy = Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger");
             var tlTerminalNode = Assets.MainAssetBundle.LoadAsset<TerminalNode>("FreddyTN");
@@ -87,7 +90,7 @@ namespace FreddyKrueger {
             {
                 if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
                 {
-                    RoundManager.Instance.SpawnEnemyGameObject(Vector3.up, 0f, +1,
+                    RoundManager.Instance.SpawnEnemyGameObject(new Vector3(82f,2f,55f), 0f, +1,
                         Assets.MainAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
 
                 }

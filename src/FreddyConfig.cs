@@ -7,13 +7,13 @@ using CSync.Util;
 namespace FreddyKrueger;
 
 [DataContract]
-public class Config : SyncedConfig<Config>
+public class FreddyConfig : SyncedConfig<FreddyConfig>
 {
     //Unsynced field :public ConfigEntry<float> DISPLAY_DEBUG_INFO { get; private set; }
     [DataMember] public SyncedEntry<int> ENTER_SLEEP { get; private set; } 
     [DataMember] public SyncedEntry<int> SLEEP_MAX { get; private set; } 
     
-    public Config(ConfigFile cfg) : base("FreddyKrueger")
+    public FreddyConfig(ConfigFile cfg) : base("FreddyKrueger")
     {
         ConfigManager.Register(this); 
         ENTER_SLEEP = cfg.BindSyncedEntry("Sleep Parameter", "Enter Sleep Value", 260,
