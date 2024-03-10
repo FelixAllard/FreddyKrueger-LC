@@ -25,7 +25,7 @@ source = "../bin/Release/netstandard2.1/FreddyKrueger.dll"
 target = "plugins/FreddyKrueger/"
 
 [[build.copy]]
-source = "../../FreddyKrueger/AssetBundles/StandaloneWindows/modassets"
+source = "../../FreddyKrueger/AssetBundles/StandaloneWindows/freddymodassets"
 target = "plugins/FreddyKrueger/"
 
 [[build.copy]]

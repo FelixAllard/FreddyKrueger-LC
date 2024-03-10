@@ -1,0 +1,34 @@
+namespace FreddyKrueger;
+
+public class PlayerSleep
+{
+    public PlayerSleep(ulong clientID, int sleepMeter)
+    {
+        this.clientID = clientID;
+        this.sleepMeter = sleepMeter;
+        this.targetPoint = 0;
+    }
+    public PlayerSleep()
+    {
+        this.targetPoint = 0;
+    }
+    public ulong ClientID
+    {
+        get => clientID;
+        set => clientID = value;
+    }
+
+    public int SleepMeter
+    {
+        get => sleepMeter;
+        set => sleepMeter = value;
+    }
+    public int TargetPoint
+    {
+        get => targetPoint;
+        set => targetPoint = value;
+    }
+    public ulong clientID;
+    public int sleepMeter;
+    public int targetPoint;
+}

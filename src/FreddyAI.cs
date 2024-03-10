@@ -23,39 +23,6 @@ using UnityEngine.Rendering;
 
 
 //PLAYER CLASS
-[Serializable]
-public class PlayerSleep
-{
-    public PlayerSleep(ulong clientID, int sleepMeter)
-    {
-        this.clientID = clientID;
-        this.sleepMeter = sleepMeter;
-        this.targetPoint = 0;
-    }
-    public PlayerSleep()
-    {
-        this.targetPoint = 0;
-    }
-    public ulong ClientID
-    {
-        get => clientID;
-        set => clientID = value;
-    }
-
-    public int SleepMeter
-    {
-        get => sleepMeter;
-        set => sleepMeter = value;
-    }
-    public int TargetPoint
-    {
-        get => targetPoint;
-        set => targetPoint = value;
-    }
-    public ulong clientID;
-    public int sleepMeter;
-    public int targetPoint;
-}
 
 public class FreddyAI : EnemyAI
 {
@@ -77,6 +44,8 @@ public class FreddyAI : EnemyAI
     [FormerlySerializedAs("EnterTheDream")] public AudioClip enterTheDream;
     [FormerlySerializedAs("Terminus")] public AudioClip terminus;
     public AudioClip footSound;
+    public AudioSource talkingAudioSource;
+    
     //TRANSFORMER
     public Transform turnCompass;
     public Transform attackArea;
@@ -136,6 +105,8 @@ public class FreddyAI : EnemyAI
 
     public void Awake()
     {
+        /*_enterSleep = 50;
+        _maxSleep = 200;*/
         _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
         _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
         if (_enterSleep == null)
@@ -270,18 +241,7 @@ public class FreddyAI : EnemyAI
                 _timer = 0;
             }
             //Footstep interval handler
-            _timerFootstep += Time.deltaTime;
-            if (_timerFootstep >= _footStepIntervale)
-            {
-                DoAIStepIntervalClientRpc();
-                _timerFootstep = 0;
-            }
-
-
-
         }
-        
-        
     }
     
     [ClientRpc]
@@ -518,6 +478,20 @@ public class FreddyAI : EnemyAI
                 {
                     // Add 1 to the value of the player THAT IS ALONE
                     playerSleepServ[count].SleepMeter += 1;
+                    //Solo Gameplay Handler
+                    if (FreddyConfig.Instance.SOLO_GAMEPLAY.Value)
+                    {
+                        if (_enterSleep + FreddyConfig.Instance.TIME_BEFORE_LEAVING_SLEEP == playerSleepServ[count].SleepMeter)
+                        {
+                            playerSleepServ[count].SleepMeter = 0;
+                            if (FreddyConfig.Instance.RANDOM_SLEEP.Value)
+                            {
+                                _enterSleep = (FreddyConfig.Instance.ENTER_SLEEP.Value +
+                                               RandomNumberGenerator.GetInt32(-50, 50));
+                                _maxSleep = _enterSleep + 200;
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -844,8 +818,8 @@ public class FreddyAI : EnemyAI
                 // Check if there's a path from teleport position to player position
                 if (CanReach(teleportPosition, _targetPlayer.transform.position))
                 {
-                    freddyTeleport.Play();
                     
+                    ShowTeleportParticleClientRpc();
                     StartCoroutine(ExecuteTeleportFreddy(teleportPosition));
                     return;
                 }
@@ -859,6 +833,14 @@ public class FreddyAI : EnemyAI
 
         // No target player, teleportation not possible
         return;
+    }
+    [ClientRpc]
+    public void ShowTeleportParticleClientRpc()
+    {
+        if (_playerSleep != null && _indexSleepArraySleep != -1)
+        {
+            freddyTeleport.Play();
+        }
     }
 
     IEnumerator ExecuteTeleportFreddy(Vector3 position)
@@ -884,41 +866,47 @@ public class FreddyAI : EnemyAI
     [ClientRpc]
     public void RandomLaughClientRpc()
     {
-        switch (RandomNumberGenerator.GetInt32(1,11))
+        if (_indexSleepArraySleep != -1)
         {
-            case(1) :
-                creatureVoice.PlayOneShot(laugh1);
-                break;
-            case(2) :
-                creatureVoice.PlayOneShot(laugh2);
-                break;
-            case(3):
-                creatureVoice.PlayOneShot(laugh3);
-                break;
-            case(4) :
-                creatureVoice.PlayOneShot(laugh4);
-                break;
-            case(5) :
-                creatureVoice.PlayOneShot(laugh5);
-                break;
-            case(6):
-                creatureVoice.PlayOneShot(laugh6);
-                break;
-            case(7) :
-                creatureVoice.PlayOneShot(laugh7);
-                break;
-            case(8) :
-                creatureVoice.PlayOneShot(laugh8);
-                break;
-            case(9):
-                creatureVoice.PlayOneShot(laugh9);
-                break;
-            case(10) :
-                creatureVoice.PlayOneShot(laugh10);
-                break;
-            default:
-                Debug.LogError("Number Generated for laugh was a miss!");
-                break;
+            if (_playerSleep[_indexSleepArraySleep].SleepMeter >= _enterSleep)
+            {
+                switch (RandomNumberGenerator.GetInt32(1,11))
+                {
+                    case(1) :
+                        talkingAudioSource.PlayOneShot(laugh1);
+                        break;
+                    case(2) :
+                        talkingAudioSource.PlayOneShot(laugh2);
+                        break;
+                    case(3):
+                        talkingAudioSource.PlayOneShot(laugh3);
+                        break;
+                    case(4) :
+                        talkingAudioSource.PlayOneShot(laugh4);
+                        break;
+                    case(5) :
+                        talkingAudioSource.PlayOneShot(laugh5);
+                        break;
+                    case(6):
+                        talkingAudioSource.PlayOneShot(laugh6);
+                        break;
+                    case(7) :
+                        talkingAudioSource.PlayOneShot(laugh7);
+                        break;
+                    case(8) :
+                        talkingAudioSource.PlayOneShot(laugh8);
+                        break;
+                    case(9):
+                        talkingAudioSource.PlayOneShot(laugh9);
+                        break;
+                    case(10) :
+                        talkingAudioSource.PlayOneShot(laugh10);
+                        break;
+                    default:
+                        Debug.LogError("Number Generated for laugh was a miss!");
+                        break;
+                }
+            }
         }
     }
 
@@ -1001,11 +989,7 @@ public class FreddyAI : EnemyAI
                 else
                 {
                     EnemyMeshAndPerson(false);
-                    if (!creatureSFX.isPlaying)
-                    {
-                        //TODO implement fade volume
-                        creatureSFX.Stop();
-                    }
+                    creatureSFX.Stop();
                 }
                 if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
                 {
@@ -1040,7 +1024,6 @@ public class FreddyAI : EnemyAI
             }
             else
             {
-                //creatureVoice.mute = true;
                 freddyRain.Stop();
                 creatureVoice.volume -= 0.2f;
                 
