@@ -105,10 +105,10 @@ public class FreddyAI : EnemyAI
 
     public void Awake()
     {
-        /*_enterSleep = 50;
-        _maxSleep = 200;*/
-        _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
-        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
+        _enterSleep = 50;
+        _maxSleep = 200;
+        /*_enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
+        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;*/
         if (_enterSleep == null)
         {
             if (_enterSleep <= 49)
@@ -173,11 +173,11 @@ public class FreddyAI : EnemyAI
                 ));
             }
         }
-        Vector3 newPosition = new Vector3(82f,2f,55f);
+        Vector3 newPosition = new Vector3(0f,200f,0f);
         RemoveRemnantsClientRpc(newPosition);
 
         // Set the new position with the specified height
-        
+       
 
         // Teleport the object to the new position
         
@@ -191,7 +191,8 @@ public class FreddyAI : EnemyAI
         IdleFreddy();
         _targetPlayer = null;
         EnemyMeshAndPerson(false);
-        
+        _firstCries = false;
+       
         transform.position = newPosition;
     }
 
@@ -227,6 +228,7 @@ public class FreddyAI : EnemyAI
     private bool _setFirstBehaviour = false;
     private bool _inCoroutine;
     private bool _footStepRight = true;
+    private bool _firstCries = false;
 
 
     public override void Update()
@@ -477,11 +479,14 @@ public class FreddyAI : EnemyAI
                 if (CheckIfAlone(player))
                 {
                     // Add 1 to the value of the player THAT IS ALONE
-                    playerSleepServ[count].SleepMeter += 1;
+                    if (FreddyConfig.Instance.SHIP_MOMMY_TARGET.Value || !player.isInHangarShipRoom)
+                    {
+                        playerSleepServ[count].SleepMeter += 1;
+                    }
                     //Solo Gameplay Handler
                     if (FreddyConfig.Instance.SOLO_GAMEPLAY.Value)
                     {
-                        if (_enterSleep + FreddyConfig.Instance.TIME_BEFORE_LEAVING_SLEEP == playerSleepServ[count].SleepMeter)
+                        if (_enterSleep + FreddyConfig.Instance.TIME_BEFORE_LEAVING_SLEEP.Value == playerSleepServ[count].SleepMeter)
                         {
                             playerSleepServ[count].SleepMeter = 0;
                             if (FreddyConfig.Instance.RANDOM_SLEEP.Value)
@@ -740,6 +745,7 @@ public class FreddyAI : EnemyAI
                 if (!breakDoor)
                 {
                     door.OpenDoorAsEnemyClientRpc();
+                    
                 }
                 if (breakDoor)
                 {
@@ -751,6 +757,12 @@ public class FreddyAI : EnemyAI
             {
             }*/
         }
+
+        if (Vector3.Distance(transform.position, FindObjectOfType<HangarShipDoor>().transform.position) <= 4f)
+        {
+            FindObjectOfType<HangarShipDoor>().SetDoorOpen();
+        }
+        
     }
     
     //------------------------------------------------------------------------------------------------------------------------END SERVER
@@ -859,7 +871,6 @@ public class FreddyAI : EnemyAI
             DoAnimationClientRpc("Teleport");
             RandomLaughClientRpc();
         }
-        
     }
 
     //Voice Logic
@@ -973,6 +984,7 @@ public class FreddyAI : EnemyAI
                 }
                 if (_playerSleep[_indexSleepArraySleep].SleepMeter ==_enterSleep-25)
                 {
+                    Debug.Log("Enter the dream! Sweet dream...");
                     creatureSFX.PlayOneShot(enterTheDream);
                     //Currently Force Loaded
                     //terminus.LoadAudioData();
@@ -983,13 +995,17 @@ public class FreddyAI : EnemyAI
                     if (!creatureSFX.isPlaying)
                     {
                         creatureSFX.Play();
+                        _firstCries = true;
                     }
                 
                 }
                 else
                 {
                     EnemyMeshAndPerson(false);
-                    creatureSFX.Stop();
+                    if (_firstCries)
+                    {
+                        creatureSFX.Stop();
+                    }
                 }
                 if (_playerSleep[_indexSleepArraySleep].SleepMeter == _maxSleep-80)
                 {
@@ -1002,10 +1018,12 @@ public class FreddyAI : EnemyAI
             }
             else
             {
-                creatureSFX.Stop();
+                if (_firstCries)
+                {
+                    creatureSFX.Stop();
+                }
                 freddyRain.Stop();
             }
-           
         }
 
         public void EnemyMeshAndPerson(bool enable)

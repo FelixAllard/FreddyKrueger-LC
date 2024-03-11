@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 repository = "https://thunderstore.io"
 
 [package]
-description = "Freddy Krueger for lethal Company"
+description = "Freddy Krueger joins Lethal Company as a brand new monster. Early Access"
 websiteUrl = "https://github.com/FelixAllard/FreddyKrueger-LC"
 containsNsfwContent = false
 [package.dependencies]

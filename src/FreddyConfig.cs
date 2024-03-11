@@ -12,6 +12,7 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
     //Unsynced field :public ConfigEntry<float> DISPLAY_DEBUG_INFO { get; private set; }
     [DataMember] public SyncedEntry<int> ENTER_SLEEP { get; private set; } 
     [DataMember] public SyncedEntry<int> SLEEP_MAX { get; private set; } 
+    [DataMember] public SyncedEntry<bool> SHIP_MOMMY_TARGET { get; private set; } 
     [DataMember] public SyncedEntry<bool> SOLO_GAMEPLAY { get; private set; } 
     [DataMember] public SyncedEntry<bool> RANDOM_SLEEP { get; private set; } 
     [DataMember] public SyncedEntry<int> TIME_BEFORE_LEAVING_SLEEP { get; private set; } 
@@ -25,6 +26,9 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
 
         SLEEP_MAX = cfg.BindSyncedEntry("Sleep Parameter", "Sleep Meter Before Rampage", 400,
             "This is the amount of sleep before Freddy wants you dead and starts running (Minimum 80 higher than 'Enter Sleep Value', suggested at very least 100 higher)"
+        );
+        SHIP_MOMMY_TARGET = cfg.BindSyncedEntry("Target Choosing", "Does sleep meter goes up for people in the ship", true,
+            "If true, it will go up for people in the ship, if false, sleep meter will stay the same if inside the ship"
         );
         
         SOLO_GAMEPLAY = cfg.BindSyncedEntry("Solo Run Settings", "Activate Solo Run", false,

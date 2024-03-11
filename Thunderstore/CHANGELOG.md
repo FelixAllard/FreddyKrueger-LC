@@ -40,6 +40,11 @@
 - Make Freddy sleep unpredictable : Makes freddy sleep timer be more inconsistent resulting in more surprise
 - Time Before Leaving Sleep : Makes the player automatically wake up after the said amount of time
 
+## 1.0.9
+- 
+
+### NEW
+- Added a config to choose if sleep meter goes up when you are inside the ship
 
 ## IN IMPLEMENTATION
 - Making more freddy voiceline

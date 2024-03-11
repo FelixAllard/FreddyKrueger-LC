@@ -61,7 +61,6 @@ namespace FreddyKrueger {
                 }
             }
             Debug.Log("PATCHING THE START");
-            harmony.PatchAll(typeof(RoundManagerBeginEnemySpawningPatch));
             harmony.PatchAll(typeof(EndOfRoundFixes));
             //harmony.PatchAll(typeof(NetworkObjectSimpleFixFixes));
             //ClawMark
@@ -79,30 +78,6 @@ namespace FreddyKrueger {
                 Plugin.Logger.LogError("Failed to load custom assets.");
                 return;
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(RoundManager))]
-    internal class RoundManagerBeginEnemySpawningPatch
-    {
-        [HarmonyPatch(nameof(RoundManager.BeginEnemySpawning))]
-        [HarmonyPostfix]
-        private static void PostfixSpawn()
-        {
-            if (RoundManager.Instance.IsServer)
-            {
-                if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
-                {
-                    RoundManager.Instance.SpawnEnemyGameObject(new Vector3(82f,2f,55f), 0f, +1,
-                        Assets.FreddyKruegerAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
-
-                }
-                else
-                {
-                    UnityEngine.Object.FindObjectOfType<FreddyAI>().ReinitialiseList();
-                }
-            }
-
         }
     }
 
