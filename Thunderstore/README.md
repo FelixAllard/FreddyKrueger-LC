@@ -1,30 +1,30 @@
-# Freddy Krueger - [New Enemy]
+# Freddy Krueger - New Enemy
 
-This mod adds Freddy Krueger from "Nightmare on Elm Street" as a fully animated and customised enemy. Freddy brings a special sleep mechanic and targets only players that are asleep while leaving the awake alone. This is the first every build of this mod and there will be a lot of updates upon this mod. If you want to talk to me, go on the official Lethal Company Modding server and give me feedback on any issues so I may fix them. I also gave a link to my Github if you want to inspire yourself from my code, which I don't suggest for I am quite the messy coder.
+This mod adds Freddy Krueger from "Nightmare on Elm Street" as a fully animated and customized enemy. Freddy brings a special sleep mechanic and targets only players that are asleep, leaving the awake ones alone. This is the first build of the mod, with more updates to come. Feel free to provide feedback and report any issues on the official Lethal Company Modding server.
 
-FREDDY BEHAVIOUR:
-It waits for people to enter sleep and then chooses which player asleep it want to targets. It will also be invisible, unearable and uninteractable to awake player. When close to being asleep, player will hear a lulaby counting to 10 before being officialy asleep.
+## Freddy's Behavior
 
-Freddy is NOT an indoor enemy, he can move between indoor and outdoor easily
+Freddy waits for players to fall asleep and then chooses which sleeping player to target. He is invisible, unhearable, and uninteractable to awake players. When a player is close to falling asleep, they will hear a lullaby counting to 10 before officially falling asleep.
 
-Asleep :
-Freddy will decide which player is in most trouble and start chasing the player teleporting around him at a random.
+Freddy is not limited to indoor environments; he can move seamlessly between indoor and outdoor areas.
+Bring asleep is a special state and more on it will be added onto it in the future
 
-Walking : Freddy will walk towards you at slow pace but will make sound when walking
-Running : Freddy will run towards you at a fast pace and will make heavy sounds
-Sneaking : Freddy will try yo catch the player off guards by nt making any sounds and f seen will teleport away
-Running with claw : Freddy will run at a fast pace non stop towards the target player until he is dead. Only happens if the player sleep goes way to high
+- **Asleep**: Freddy will determine which player is in the most trouble and start chasing them, teleporting around at random.
+- **Walking**: Freddy will walk towards players at a slow pace, making noise as he moves.
+- **Running**: Freddy will run towards players at a fast pace, emitting heavy sounds.
+- **Sneaking**: Freddy will attempt to catch players off guard by making no sounds. If seen, he will teleport away.
+- **Running with Claw**: Freddy will relentlessly chase a target player at a fast pace until they are dead. This only occurs if the player's sleep level becomes too high.
 
-Kill behaviour : Freddy does like the little girl and sends your head flying
+When Freddy kills a player, their head will be sent flying.
 
-KNOWN ISSUE :
--Model visible when exiting ship
--Scan node doesn't bring anything to the terminal
--When leaving the session and entering a new one without restarting game, freddy doesn't work
+## Known Issues
 
-CREDITS :
-The model was made by EWTube0
-https://skfb.ly/6ZFt8
-Most animation were taken from Mixamo free license
-Music taken from DBD and reverbed for better immersion
+- Model is visible when exiting the ship.
+- Scan node does not provide any information to the terminal.
+- Freddy does not work when leaving the session and entering a new one without restarting the game.
 
+## Credits
+
+- Model: EWTube0 (https://skfb.ly/6ZFt8)
+- Most animations: Mixamo (free license)
+- Music: Taken from Dead by Daylight and reverbed for better immersion

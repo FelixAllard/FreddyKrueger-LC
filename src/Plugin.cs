@@ -11,6 +11,7 @@ using BepInEx.Logging;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using GameNetcodeStuff;
 using Unity.Netcode;
 using NetworkPrefabs = LethalLib.Modules.NetworkPrefabs;
@@ -92,7 +93,7 @@ namespace FreddyKrueger {
             {
                 if (!UnityEngine.Object.FindObjectOfType<FreddyAI>())
                 {
-                    RoundManager.Instance.SpawnEnemyGameObject(new Vector3(0f,200f,0f), 0f, +1,
+                    RoundManager.Instance.SpawnEnemyGameObject(RoundManager.Instance.allEnemyVents[0].transform.position, 0f, +1,
                         Assets.FreddyKruegerAssetBundle.LoadAsset<EnemyType>("FreddyKrueger"));
                 }
                 else

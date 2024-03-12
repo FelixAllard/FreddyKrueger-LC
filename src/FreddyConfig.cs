@@ -16,6 +16,7 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
     [DataMember] public SyncedEntry<bool> SOLO_GAMEPLAY { get; private set; } 
     [DataMember] public SyncedEntry<bool> RANDOM_SLEEP { get; private set; } 
     [DataMember] public SyncedEntry<int> TIME_BEFORE_LEAVING_SLEEP { get; private set; } 
+    // TODO : Create a setting for the distance between player for a player to be alone or not
     
     public FreddyConfig(ConfigFile cfg) : base("FreddyKrueger")
     {

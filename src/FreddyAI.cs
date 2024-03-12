@@ -105,10 +105,30 @@ public class FreddyAI : EnemyAI
 
     public void Awake()
     {
-        _enterSleep = 50;
-        _maxSleep = 200;
-        /*_enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
-        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;*/
+        if (agent == null)
+        {
+            agent = GetComponent<NavMeshAgent>();
+            freddyRain = GetComponent<ParticleSystem>();
+            
+            
+            
+            laugh1 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh1");
+            laugh2 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh2");
+            laugh3 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh3");
+            laugh4 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh4");
+            laugh5 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh5");
+            laugh6 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh6");
+            laugh7 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh7");
+            laugh8 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh8");
+            laugh9 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh9");
+            laugh10 = Assets.FreddyKruegerAssetBundle.LoadAsset<AudioClip>("laugh10");
+            
+            
+        }
+        /*_enterSleep = 50;
+        _maxSleep = 200;*/
+        _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
+        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
         if (_enterSleep == null)
         {
             if (_enterSleep <= 49)
@@ -173,12 +193,14 @@ public class FreddyAI : EnemyAI
                 ));
             }
         }
-        Vector3 newPosition = new Vector3(0f,200f,0f);
-        RemoveRemnantsClientRpc(newPosition);
+
+        if (RoundManager.Instance.allEnemyVents.Length > 0)
+        {
+            RemoveRemnantsClientRpc(RoundManager.Instance.allEnemyVents[0].transform.position);
+        }
+        
 
         // Set the new position with the specified height
-       
-
         // Teleport the object to the new position
         
     }
@@ -542,7 +564,7 @@ public class FreddyAI : EnemyAI
                 float distance = Vector3.Distance(currentPlayerPosition, otherPlayerPosition);
 
                 // Check if the distance is within the specified range
-                if (distance <= 10f && player != playerSleepServ[count].ClientID.GetPlayerController())
+                if (distance <= 15f && player != playerSleepServ[count].ClientID.GetPlayerController())
                 {
                     // If the distance is less than or equal to 10, the current player is considered with another player
                     return false;
@@ -757,11 +779,12 @@ public class FreddyAI : EnemyAI
             {
             }*/
         }
-
+    /*
         if (Vector3.Distance(transform.position, FindObjectOfType<HangarShipDoor>().transform.position) <= 4f)
         {
             FindObjectOfType<HangarShipDoor>().SetDoorOpen();
         }
+        */
         
     }
     

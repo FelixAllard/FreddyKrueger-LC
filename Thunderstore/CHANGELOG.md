@@ -40,11 +40,21 @@
 - Make Freddy sleep unpredictable : Makes freddy sleep timer be more inconsistent resulting in more surprise
 - Time Before Leaving Sleep : Makes the player automatically wake up after the said amount of time
 
-## 1.0.9
-- 
+## 1.0.9 DEVELOPER BUILD ( VALUES AND SETTING DO NOT WORK )
+- Fixed problem with falling asleep music [FOUND BY : MIST]
+- Fixed problem where freddy is chilling in the ship []
 
 ### NEW
 - Added a config to choose if sleep meter goes up when you are inside the ship
+
+## IMPORTANT NOTICE
+- I will take a break of 3-4 days in the development except in fatal error of the mod, my work will be focused around school
+
+## 1.0.10
+- I activated the settings once again for I deactivated them for testing
+
+## 1.0.11
+- Fixed a bug that made freddy invisible until he killed you
 
 ## IN IMPLEMENTATION
 - Making more freddy voiceline
