@@ -31,6 +31,8 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
     [DataMember] public SyncedEntry<int> DINE_SPAWNRATE { get; private set; } 
     [DataMember] public SyncedEntry<int> TITAN_SPAWNRATE { get; private set; } 
     
+    [DataMember] public SyncedEntry<float> SOUND_CHILD_VOLUME { get; private set; } 
+    
     
     // TODO : Create a setting for the distance between player for a player to be alone or not
     
@@ -61,7 +63,9 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
             "ACTIVATE SOLO RUN MUST BE ON : This setting decides how much time will it take for you to automatically leave the dream world after entering it"
         );
         
-        BASE_SPAWN_CHANCES = cfg.BindSyncedEntry("Spawn Behaviour", "Default Spawn Chance in Percentage", 100,
+        
+        
+        BASE_SPAWN_CHANCES = cfg.BindSyncedEntry("Spawn Behaviour", "Default Spawn Chance in Percentage", 35,
             "Option must be between 0 and 100 : This config changes the default spawn chances that Freddy manifest when you lend on a moon. This value is override on basic moons. This will be the value used on modded moons"
         );
         
@@ -93,6 +97,10 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
         );
         TITAN_SPAWNRATE = cfg.BindSyncedEntry("Moon Spawn rate", "Spawn rate for Titan", 25,
             "This option is only activated if it Activate the per moon spawn rate is true. This value is in percentage %"
+        );
+        
+        SOUND_CHILD_VOLUME = cfg.BindSyncedEntry("Sound Parameter", "Enter the Volume of the Child Singing", 0.5f,
+            "This value must be from 0.0f to 1.0f . Anything above or under will be treated as 0.0f or 1.0f"
         );
         
         

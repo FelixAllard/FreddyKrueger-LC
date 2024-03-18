@@ -19,7 +19,7 @@ When Freddy kills a player, their head will be sent flying.
 
 ## Known Issues
 - Scan node does not provide any information to the terminal.
-
+- If you find an issue not listed, you can either go talk to me on the LC modding server or fill out [this survey](https://docs.google.com/forms/d/e/1FAIpQLSd4mc1ShKjs_xxfM7oA1fASY8Qx7JUYDIC55YrCCpPns-X74w/viewform?usp=sf_link).
 ## Credits
 
 - Model: EWTube0 (https://skfb.ly/6ZFt8)

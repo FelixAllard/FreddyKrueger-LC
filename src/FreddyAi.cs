@@ -73,8 +73,6 @@ public class FreddyAi :  EnemyAI
 
     public void Awake()
     {
-        /*_enterSleep = 50;
-        _maxSleep = 200;*/
         _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
         _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
         //Sleep Validation
@@ -95,6 +93,18 @@ public class FreddyAi :  EnemyAI
     public override void Start()
     {
         base.Start();
+        if (FreddyConfig.Instance.SOUND_CHILD_VOLUME > 1.0f)
+        {
+            creatureSFX.volume = 1.0f;
+        }
+        else if (FreddyConfig.Instance.SOUND_CHILD_VOLUME <0.0f)
+        {
+            creatureSFX.volume = 0.0f;
+        }
+        else
+        {
+            creatureSFX.volume = FreddyConfig.Instance.SOUND_CHILD_VOLUME;
+        }
         _clientId = RoundManager.Instance.playersManager.localPlayerController.actualClientId;
         if (IsHost)
         {

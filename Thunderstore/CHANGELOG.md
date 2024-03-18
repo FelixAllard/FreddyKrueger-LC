@@ -74,20 +74,29 @@
 
 - Remade entire codebase and changed the unity project completely
 - Removed Xilo - Lethal Network Api from dependencies
-- Removed LordFireSpeed - OdingSerializer from dependecies
+- Removed LordFireSpeed - OdingSerializer from dependencies
 - Removed a bug that freddy would be visible when in space or when going to sell
 - Removed a bug that made Freddy stop working after leaving the session
 
 ## 2.0.12
 - Removed a developer errors
 
-## 2.0.13
-- Adding 2 new config to modify spawn rate
+## 2.1.12
+- Added many configs :
+- You can now modify the spawn rate! We have a base 35 % spawn rate which is modifiable
+- Option to enable per moon spawn rate. This true or false value enables the following options regarding moon spawn rate
+- You can change the spawn rate of Freddy on specific moos if the option above is enabled. This creates an option for every basic moons.
+- Added an option regarding the minimum distance  between player for them to be considered together.
+- Added a sound config to choose what we want the sound to be for all the melodies that play
+- Removed freddy's scan node because it gave me some problems with how it was handled when invisible
+
 
 
 
 ## IN IMPLEMENTATION
-- Making more freddy voiceline
+- Making more freddy voiceless
 - Camera modification effect when asleep
 - Between Player interaction for removing sleep
+- Freddy related items
+- Better sleep effects
 - More to come
