@@ -146,7 +146,6 @@ namespace ExampleEnemy {
                                 }
                                 break;
                         }
-
                         if (spawnFreddy)
                         {
                             Debug.Log("Freddy is here! Wait till you sleep tho...");

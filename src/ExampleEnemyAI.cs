@@ -96,7 +96,7 @@ namespace ExampleEnemy {
 
                 case (int)State.StickingInFrontOfPlayer:
                     agent.speed = 5f;
-                    // Keep targetting closest player, unless they are over 20 units away and we can't see them.
+                    // Keep targeting closest player, unless they are over 20 units away and we can't see them.
                     if (!TargetClosestPlayerInAnyCase() || (Vector3.Distance(transform.position, targetPlayer.transform.position) > 20 && !HasLineOfSightToPosition(targetPlayer.transform.position))){
                         LogIfDebugBuild("Stop Target Player");
                         StartSearch(transform.position);

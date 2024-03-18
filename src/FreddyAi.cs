@@ -752,7 +752,7 @@ public class FreddyAi :  EnemyAI
                 float distance = Vector3.Distance(currentPlayerPosition, otherPlayerPosition);
 
                 // Check if the distance is within the specified range
-                if (distance <= 15f && player != GetPlayerController(_playerSleep[count].ClientID))
+                if (distance <= FreddyConfig.Instance.DISTANCE_FOR_SLEEP && player != GetPlayerController(_playerSleep[count].ClientID))
                 {
                     // If the distance is less than or equal to 10, the current player is considered with another player
                     return false;
@@ -795,7 +795,6 @@ public class FreddyAi :  EnemyAI
                         Debug.Log("Removing Player From array");
                         _playerSleep.Remove(player);
                         SetSleepClientRpc(JsonConvert.SerializeObject(_playerSleep),true);
-                        Debug.Log("Possible target = An index changed");
                     }
                 }
             }
