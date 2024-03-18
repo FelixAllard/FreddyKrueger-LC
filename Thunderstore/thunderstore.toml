@@ -20,11 +20,11 @@ outdir = "./Packages"
 
 [[build.copy]]
 source = "../bin/Release/netstandard2.1/FreddyKrueger.dll"
-target = "plugins/ExampleEnemy/"
+target = "plugins/FreddyKrueger/"
 
 [[build.copy]]
 source = "../../UnityProject/AssetBundles/StandaloneWindows/freddymodassets"
-target = "plugins/ExampleEnemy/"
+target = "plugins/FreddyKrueger/"
 
 [[build.copy]]
 source = "./CHANGELOG.md"
@@ -34,4 +34,4 @@ target = "/"
 communities = [ "lethal-company", ]
 [publish.categories]
 # Get the list of categories from https://thunderstore.io/api/experimental/community/lethal-company/category/
-lethal-company = [ "bepinex", "clientside", "serverside", "monsters", "mods", ]
+lethal-company = [ "monsters", "mods", "bepinex" ]

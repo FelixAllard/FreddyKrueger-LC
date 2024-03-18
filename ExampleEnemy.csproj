@@ -9,7 +9,7 @@
     <!-- Configure description for Thunderstore at ./Thunderstore/thunderstore.toml -->
     <Description>Example Enemy for Lethal Company.</Description>
 		<!-- This is the version of your plugin. This will be used by tcli when building our Thunderstore package. -->
-    <Version>1.0.0</Version>
+    <Version>2.0.12</Version>
 		<!-- This is required for BepInEx to load us properly. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- This allows us to use C#11 features, for the most part. -->
@@ -24,7 +24,7 @@
   </PropertyGroup>
   <PropertyGroup>
 	  <!-- Your Thunderstore Team name. This will be used by tcli when building our Thunderstore package. -->
-    <ThunderstoreTeam>TheWeavers</ThunderstoreTeam>
+    <ThunderstoreTeam>Xilef992</ThunderstoreTeam>
   </PropertyGroup>
 
   <ItemGroup>

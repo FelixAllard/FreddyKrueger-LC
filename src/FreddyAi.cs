@@ -73,10 +73,10 @@ public class FreddyAi :  EnemyAI
 
     public void Awake()
     {
-        _enterSleep = 50;
-        _maxSleep = 200;
-        /*_enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
-        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;*/
+        /*_enterSleep = 50;
+        _maxSleep = 200;*/
+        _enterSleep = FreddyConfig.Instance.ENTER_SLEEP.Value;
+        _maxSleep = FreddyConfig.Instance.SLEEP_MAX.Value;
         //Sleep Validation
         if (_enterSleep == null)
         {

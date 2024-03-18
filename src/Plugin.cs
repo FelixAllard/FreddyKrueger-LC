@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Reflection;
 using UnityEngine;
 using BepInEx;
 using LethalLib.Modules;
 using BepInEx.Logging;
 using System.IO;
+using System.Security.Cryptography;
 using HarmonyLib;
+using Debug = UnityEngine.Debug;
 
 namespace ExampleEnemy {
     [BepInDependency("com.sigurd.csync")] 
@@ -82,19 +86,104 @@ namespace ExampleEnemy {
             {
                 if (RoundManager.Instance.IsServer && RoundManager.Instance.allEnemyVents.Length>0)
                 {
-                    Debug.Log("Freddy is here! Wait till you sleep tho...");
-                    var allEnemiesList = new List<SpawnableEnemyWithRarity>();
-                    allEnemiesList.AddRange(RoundManager.Instance.currentLevel.Enemies);
-                    allEnemiesList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
-                    var enemyToSpawn = allEnemiesList.Find(x => x.enemyType.enemyName.Equals("FreddyKrueger"));
+                    if (FreddyConfig.Instance.USE_MOON_CHANCES)
+                    {
+                        bool spawnFreddy = false;
+                        switch (RoundManager.Instance.currentLevel.PlanetName)
+                        {
+                            case "41 Experimentation" :
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.EXPERIMENTATION_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "220 Assurance":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.ASSURANCE_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "56 Vow" :
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.VOW_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "12 Offense":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.OFFENSE_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "61 March":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.MARCH_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "85 Rend":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.REND_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "7 Dine":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.DINE_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            case "8 Titan":
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.TITAN_SPAWNRATE)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                            default:
+                                if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.BASE_SPAWN_CHANCES)
+                                {
+                                    spawnFreddy = true;
+                                }
+                                break;
+                        }
+
+                        if (spawnFreddy)
+                        {
+                            Debug.Log("Freddy is here! Wait till you sleep tho...");
+                            var allEnemiesList = new List<SpawnableEnemyWithRarity>();
+                            allEnemiesList.AddRange(RoundManager.Instance.currentLevel.Enemies);
+                            allEnemiesList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
+                            var enemyToSpawn = allEnemiesList.Find(x => x.enemyType.enemyName.Equals("FreddyKrueger"));
+                        
+                            Debug.Log(enemyToSpawn.enemyType.enemyName + "This is the name!");
+                            //EnemyAI.Instantiate()
+                            RoundManager.Instance.SpawnEnemyGameObject(RoundManager.Instance.allEnemyVents[0].transform.position, 0f,RoundManager.Instance.currentLevel.OutsideEnemies.IndexOf(enemyToSpawn),enemyToSpawn.enemyType);
+
+                        }
+                        else
+                        {
+                            Debug.Log("Freddy's Spawn was a miss");
+                        }
+                    }
+                    else
+                    {
+                        if (RandomNumberGenerator.GetInt32(0, 101) <= FreddyConfig.Instance.BASE_SPAWN_CHANCES)
+                        {
+                            Debug.Log("Freddy is here! Wait till you sleep tho...");
+                            var allEnemiesList = new List<SpawnableEnemyWithRarity>();
+                            allEnemiesList.AddRange(RoundManager.Instance.currentLevel.Enemies);
+                            allEnemiesList.AddRange(RoundManager.Instance.currentLevel.OutsideEnemies);
+                            var enemyToSpawn = allEnemiesList.Find(x => x.enemyType.enemyName.Equals("FreddyKrueger"));
                     
-                    Debug.Log(enemyToSpawn.enemyType.enemyName + "This is the name!");
-                    //EnemyAI.Instantiate()
-                    RoundManager.Instance.SpawnEnemyGameObject(RoundManager.Instance.allEnemyVents[0].transform.position, 0f,RoundManager.Instance.currentLevel.OutsideEnemies.IndexOf(enemyToSpawn),enemyToSpawn.enemyType);
-                    /*UnityEngine.Object.Instantiate(enemyToSpawn.enemyType.enemyPrefab.gameObject,
-                        RoundManager.Instance.allEnemyVents[0].transform.position,
-                        Quaternion.identity);*/
-                
+                            Debug.Log(enemyToSpawn.enemyType.enemyName + "This is the name!");
+                            //EnemyAI.Instantiate()
+                            RoundManager.Instance.SpawnEnemyGameObject(RoundManager.Instance.allEnemyVents[0].transform.position, 0f,RoundManager.Instance.currentLevel.OutsideEnemies.IndexOf(enemyToSpawn),enemyToSpawn.enemyType);
+                        }
+                        else
+                        {
+                            Debug.Log("Freddy's Spawn was a miss");
+                        }
+                    }
                 }
             }
         }

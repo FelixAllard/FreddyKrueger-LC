@@ -68,7 +68,7 @@
 ##### [EARLY ACCESS]
 - Fixed a bug that made freddy invisible until he killed you
 
-- ## 2.0.11 - 
+## 2.0.11 -
 
 #### Stable build
 
@@ -77,6 +77,13 @@
 - Removed LordFireSpeed - OdingSerializer from dependecies
 - Removed a bug that freddy would be visible when in space or when going to sell
 - Removed a bug that made Freddy stop working after leaving the session
+
+## 2.0.12
+- Removed a developer errors
+
+## 2.0.13
+- Adding 2 new config to modify spawn rate
+
 
 
 ## IN IMPLEMENTATION
