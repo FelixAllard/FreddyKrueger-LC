@@ -10,6 +10,13 @@ using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
+//From Chaos postprocess thingy
+using GraphicsAPI;
+using UnityEngine.Rendering;
+using static UnityEngine.Rendering.HighDefinition.RenderPipelineSettings;
+using UnityEngine.Rendering.HighDefinition;
+using GraphicsAPI.CustomPostProcessing;
+
 namespace ExampleEnemy;
 
 public class FreddyAi :  EnemyAI
@@ -38,6 +45,9 @@ public class FreddyAi :  EnemyAI
     public ParticleSystem freddyTeleport;
     //Transform
     public Transform attackArea;
+    //Try post process
+    public Material BWShadder;
+    
     
     private List<PlayerSleep> _playerSleep;
     
@@ -60,6 +70,14 @@ public class FreddyAi :  EnemyAI
     private bool _inCoroutine;
     private bool _firstCries;
     private bool _someoneIsKo;
+    
+    
+    
+    //PostProcess
+    private PostProcessVisualsFreddy freddyPost;
+    
+
+    
 
     enum State
     {
@@ -89,10 +107,32 @@ public class FreddyAi :  EnemyAI
             }
         }
     }
-
+    
     public override void Start()
     {
         base.Start();
+        RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
+        
+        // Assign the material to the Render Texture
+        Graphics.Blit(null, renderTexture, BWShadder);
+        
+        // Apply the Render Texture to the camera
+        RoundManager.Instance.playersManager.allPlayerScripts[0].gameplayCamera.targetTexture = renderTexture;
+        
+        if (HUDManager.Instance.gameObject.GetComponent<PostProcessVisualsFreddy>() != null)
+        {
+            // Get the component
+            freddyPost = HUDManager.Instance.GetComponent<PostProcessVisualsFreddy>();
+  
+            if (freddyPost.fullScreenPass != null)
+            {
+                freddyPost.fullScreenPass.enabled = true;
+                // Use freddyPost.fullScreenPass here
+            }
+        }
+        
+        
+        
         if (FreddyConfig.Instance.SOUND_CHILD_VOLUME > 1.0f)
         {
             creatureSFX.volume = 1.0f;
@@ -133,13 +173,11 @@ public class FreddyAi :  EnemyAI
             }
             //Footstep interval handler
         }
-
-        
-        
     }
 
     public override void DoAIInterval()
     {
+
         base.DoAIInterval();
         SwingAttackHitClientRpc();
         if (targetPlayer != null)
@@ -609,7 +647,7 @@ public class FreddyAi :  EnemyAI
     [ClientRpc]
     public void SetSleepClientRpc(string json, bool reinitialiseArray)
     {
-        List<PlayerSleep> receivedList = JsonConvert.DeserializeObject<List<PlayerSleep>>(json);
+        _playerSleep = JsonConvert.DeserializeObject<List<PlayerSleep>>(json);
         if (reinitialiseArray)
         {
             SetLocalIndex();
@@ -997,4 +1035,6 @@ public class FreddyAi :  EnemyAI
             _indexSleepArray = -1;
         }
     }
+    
+    //
 }

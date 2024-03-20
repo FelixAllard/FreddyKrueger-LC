@@ -89,6 +89,9 @@
 - Added an option regarding the minimum distance  between player for them to be considered together.
 - Added a sound config to choose what we want the sound to be for all the melodies that play
 - Removed freddy's scan node because it gave me some problems with how it was handled when invisible
+- 
+## 2.1.12
+- Removed a small bug that desynchronized freddy krueger from one player to another
 
 
 
