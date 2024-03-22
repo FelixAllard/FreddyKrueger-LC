@@ -9,7 +9,7 @@
     <!-- Configure description for Thunderstore at ./Thunderstore/thunderstore.toml -->
     <Description>This is Freddy Krueger as a spawnable enemy</Description>
 		<!-- This is the version of your plugin. This will be used by tcli when building our Thunderstore package. -->
-    <Version>2.1.13</Version>
+    <Version>2.2.14</Version>
 		<!-- This is required for BepInEx to load us properly. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- This allows us to use C#11 features, for the most part. -->
@@ -48,6 +48,11 @@
     <Reference Include="Assembly-CSharp"><HintPath>../dlls/Assembly-CSharp.dll</HintPath></Reference>
     <Reference Include="Unity.Netcode.Runtime"><HintPath>../dlls/Unity.Netcode.Runtime.dll</HintPath></Reference>
     <Reference Include="LethalLib"><HintPath>../dlls/LethalLib.dll</HintPath></Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="src\PostProccessPatchFreddy.cs" />
+    <Compile Remove="src\PostProcessVisualsFreddy.cs" />
+    <Compile Remove="src\ExampleEnemyAI.cs" />
   </ItemGroup>
   <PropertyGroup>
     <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>

@@ -37,6 +37,7 @@ namespace ExampleEnemy {
         }
 
         public override void Start() {
+            
             base.Start();
             LogIfDebugBuild("Example Enemy Spawned");
             timeSinceHittingLocalPlayer = 0;

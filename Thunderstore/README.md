@@ -4,10 +4,10 @@ This mod adds Freddy Krueger from "Nightmare on Elm Street" as a fully animated 
 
 ## Freddy's Behavior
 
-Freddy waits for players to fall asleep and then chooses which sleeping player to target. He is invisible, unhearable, and uninteractable to awake players. When a player is close to falling asleep, they will hear a lullaby counting to 10 before officially falling asleep.
+Freddy waits for players to sleep walk and then chooses which sleeping player to target. He is invisible, unhearable, and uninteractable to awake players. When a player is close to falling sleep walking, they will hear a lullaby counting to 10 before officially falling asleep.
 
 Freddy is not limited to indoor environments; he can move seamlessly between indoor and outdoor areas.
-Bring asleep is a special state and more on it will be added onto it in the future
+Sleep walking is a special state and more on it will be added onto it in the future
 
 - **Asleep**: Freddy will determine which player is in the most trouble and start chasing them, teleporting around at random.
 - **Walking**: Freddy will walk towards players at a slow pace, making noise as he moves.
@@ -18,10 +18,14 @@ Bring asleep is a special state and more on it will be added onto it in the futu
 When Freddy kills a player, their head will be sent flying.
 
 ## Known Issues
-- Scan node does not provide any information to the terminal.
+- The rarity of the enemy doesn't change anything. This is normal and intended and won't change, please refer to Freddy's config on how to make him spawn more often.
 - If you find an issue not listed, you can either go talk to me on the LC modding server or fill out [this survey](https://docs.google.com/forms/d/e/1FAIpQLSd4mc1ShKjs_xxfM7oA1fASY8Qx7JUYDIC55YrCCpPns-X74w/viewform?usp=sf_link).
 ## Credits
 
 - Model: EWTube0 (https://skfb.ly/6ZFt8)
 - Most animations: Mixamo (free license)
 - Music: Taken from Dead by Daylight and reverbed for better immersion
+
+No Money is made from this mod creation.
+If anyone wants their work removed from the mod, please contact me through my discord or fill [this survey](https://docs.google.com/forms/d/e/1FAIpQLSd4mc1ShKjs_xxfM7oA1fASY8Qx7JUYDIC55YrCCpPns-X74w/viewform?usp=sf_link) and indicate your email so I may contact you.
+

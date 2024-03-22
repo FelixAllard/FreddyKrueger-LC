@@ -16,6 +16,7 @@ using UnityEngine.Rendering;
 using static UnityEngine.Rendering.HighDefinition.RenderPipelineSettings;
 using UnityEngine.Rendering.HighDefinition;
 using GraphicsAPI.CustomPostProcessing;
+using UnityEngine.Serialization;
 
 namespace ExampleEnemy;
 
@@ -47,6 +48,13 @@ public class FreddyAi :  EnemyAI
     public Transform attackArea;
     //Try post process
     public Material BWShadder;
+
+    public Material shirt;
+    public Material pants;
+    public Material hands;
+    public Material claw;
+    [FormerlySerializedAs("hat")] public Material face;
+    
     
     
     private List<PlayerSleep> _playerSleep;
@@ -70,11 +78,13 @@ public class FreddyAi :  EnemyAI
     private bool _inCoroutine;
     private bool _firstCries;
     private bool _someoneIsKo;
-    
+    private bool _alreadyPlayerIntro = false;
+    private bool _alreadyClock = false;
+    private bool _freddySeen;
     
     
     //PostProcess
-    private PostProcessVisualsFreddy freddyPost;
+    /*private PostProcessVisualsFreddy freddyPost;*/
     
 
     
@@ -111,7 +121,7 @@ public class FreddyAi :  EnemyAI
     public override void Start()
     {
         base.Start();
-        RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
+        /*RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
         
         // Assign the material to the Render Texture
         Graphics.Blit(null, renderTexture, BWShadder);
@@ -129,7 +139,7 @@ public class FreddyAi :  EnemyAI
                 freddyPost.fullScreenPass.enabled = true;
                 // Use freddyPost.fullScreenPass here
             }
-        }
+        }*/
         
         
         
@@ -179,7 +189,6 @@ public class FreddyAi :  EnemyAI
     {
 
         base.DoAIInterval();
-        SwingAttackHitClientRpc();
         if (targetPlayer != null)
         {
             SetDestinationToPosition(targetPlayer.transform.position, true);
@@ -227,7 +236,7 @@ public class FreddyAi :  EnemyAI
                         TeleportRandomlyAroundPlayer(20, 30);
                         IdleFreddy();
                         DoAnimationClientRpc("Running",true);
-                        agent.speed = 7f;
+                        agent.speed = 4f + FreddyConfig.Instance.SPEED_MODIFIER;
                         _justSwitchedBehaviour = false;
                         if (!_inCoroutine)
                         {
@@ -249,10 +258,11 @@ public class FreddyAi :  EnemyAI
                         TeleportRandomlyAroundPlayer((_minTeleport>=0)?_minTeleport:0f,(_minTeleport>=0)?_maxTeleport:3f );
                         IdleFreddy();
                         DoAnimationClientRpc("RunWithClaw",true);
-                        agent.speed = 6;
+                        agent.speed = 5+ FreddyConfig.Instance.SPEED_MODIFIER;
                         
                         _justSwitchedBehaviour = false;
                     }
+                    agent.speed += FreddyConfig.Instance.SPEED_MODIFIER_LAST_STAGE;
                     if (IsHost)
                     {
                         DoorHandler(false);
@@ -265,8 +275,9 @@ public class FreddyAi :  EnemyAI
                         agent.acceleration = 8;
                         TeleportRandomlyAroundPlayer(15, 20);
                         IdleFreddy();
-                        agent.speed = 3f;
+                        agent.speed = 1+ FreddyConfig.Instance.SPEED_MODIFIER;
                         DoAnimationClientRpc("Sneaking", true);
+                        StartCoroutine(WaitAndChangeBehavior(17));
 
                         _justSwitchedBehaviour = false;
                         agent.acceleration = 0;
@@ -278,19 +289,17 @@ public class FreddyAi :  EnemyAI
                     Vector3 screenPoint = targetPlayer.gameplayCamera.WorldToViewportPoint(transform.position);
 
                     // Check if the object is within the camera's view
+                    /*
                     bool isVisible = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
                     if (isVisible)
                     {
-                        IdleFreddy();
-                        RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
-                        agent.speed = 0f;
-                        if (!_inCoroutine)
-                        {
-                            RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
-                            DoAnimationClientRpc("Suprised");
-                            StartCoroutine(WaitAndChangeBehavior(3f));
-                            _inCoroutine = true;
-                        }
+                        
+                    }
+                    */
+                    //SNEAKING AHHHHH
+                    if (targetPlayer.HasLineOfSightToPosition(transform.position) && _freddySeen ==false)
+                    {
+                        StartCoroutine(FreddyGotSeen());
                     }
                     break;
                 case (int)State.None:
@@ -301,6 +310,23 @@ public class FreddyAi :  EnemyAI
                     break;
             }
         }
+    }
+
+    IEnumerator FreddyGotSeen()
+    {
+        yield return new WaitForSeconds(2);
+        IdleFreddy();
+        RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
+        agent.speed = 0f;
+        if (!_inCoroutine)
+        {
+            RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
+            DoAnimationClientRpc("Suprised");
+            StartCoroutine(WaitAndChangeBehavior(3f));
+            _inCoroutine = true;
+        }
+
+        _freddySeen = true;
     }
     //Business Handler Logic Server:
     IEnumerator SeeIfAccessible()
@@ -370,7 +396,7 @@ public class FreddyAi :  EnemyAI
                         if (FreddyConfig.Instance.RANDOM_SLEEP.Value)
                         {
                             _enterSleep = (FreddyConfig.Instance.ENTER_SLEEP.Value +
-                                           RandomNumberGenerator.GetInt32(-50, 50));
+                                           RandomNumberGenerator.GetInt32(0, 50));
                             _maxSleep = _enterSleep + 200;
                         }
                         
@@ -531,7 +557,7 @@ public class FreddyAi :  EnemyAI
             if (_targetPlayerSleep.SleepMeter >=_enterSleep && _targetPlayerSleep.SleepMeter <_maxSleep)
             {
                 
-                if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
+                if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE)
                 {
                     if (currentBehaviourStateIndex != 2)
                     {
@@ -540,7 +566,7 @@ public class FreddyAi :  EnemyAI
                     }
                     //RUNNING
                 }
-                else if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+50)))
+                else if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE)
                 {
                     //Sneaking
                     if (currentBehaviourStateIndex != 4)
@@ -595,10 +621,14 @@ public class FreddyAi :  EnemyAI
                         //enterTheDream.LoadAudioData();
                     }
                 }
-                if (_playerSleep[_indexSleepArray].SleepMeter ==_enterSleep-25)
+                if (_playerSleep[_indexSleepArray].SleepMeter >=_enterSleep-25)
                 {
-                    Debug.Log("Enter the dream! Sweet dream...");
-                    creatureSFX.PlayOneShot(enterTheDream);
+                    if (_alreadyPlayerIntro == false)
+                    {
+                        Debug.Log("Enter the dream! Sweet dream...");
+                        creatureSFX.PlayOneShot(enterTheDream);
+                        _alreadyPlayerIntro = true;
+                    }
                     //Currently Force Loaded
                     //terminus.LoadAudioData();
                 }
@@ -620,9 +650,14 @@ public class FreddyAi :  EnemyAI
                         creatureSFX.Stop();
                     }
                 }
-                if (_playerSleep[_indexSleepArray].SleepMeter == _maxSleep-80)
+                if (_playerSleep[_indexSleepArray].SleepMeter >= _maxSleep-80)
                 {
-                    creatureSFX.PlayOneShot(terminus);
+                    if (!_alreadyClock)
+                    {
+                        Debug.Log("You better run!");
+                        creatureSFX.PlayOneShot(terminus);
+                        _alreadyClock = true;
+                    }
                 }
                 else if (_playerSleep[_indexSleepArray].SleepMeter < _maxSleep-80)
                 {
@@ -668,7 +703,9 @@ public class FreddyAi :  EnemyAI
     {
         if (_playerSleep != null && _indexSleepArray != -1)
         {
-            freddyTeleport.Play();
+            StartCoroutine(TransitionMaterial(false, 1f));
+            //TODO remove unused freddyTeleport
+            //freddyTeleport.Play();
         }
     }
     
@@ -702,29 +739,28 @@ public class FreddyAi :  EnemyAI
     {
         creatureAnimator.SetTrigger(animationName);
     }
-    [ClientRpc]
-    public void SwingAttackHitClientRpc()
+
+
+    public override void OnCollideWithPlayer(Collider other)
     {
-        int playerLayer = 1 << 3; // Assuming the layer for players is 3, adjust accordingly
-        Collider[] hitColliders = Physics.OverlapBox(attackArea.position, attackArea.localScale, Quaternion.identity, playerLayer);
-        if (hitColliders.Length > 0)
+        PlayerControllerB playerControllerB = other.gameObject.GetComponent<PlayerControllerB>();;
+        if (playerControllerB != null)
         {
-            foreach (var playerCollider in hitColliders)
+            PlayerSleep sleepTouchedPlayer = _playerSleep.FirstOrDefault(obj => obj.ClientID == playerControllerB.actualClientId);
+            if (sleepTouchedPlayer.SleepMeter >= _enterSleep)
             {
-                PlayerControllerB playerControllerB = playerCollider.GetComponent<PlayerControllerB>();
-                if (playerControllerB != null)
-                {
-                    PlayerSleep sleepTouchedPlayer = _playerSleep.FirstOrDefault(obj => obj.ClientID == playerControllerB.actualClientId);
-                    if (sleepTouchedPlayer.SleepMeter >= _enterSleep)
-                    {
-                        RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
-                        playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Unknown,1);
-                        SwitchToBehaviourClientRpc(0);
-                    }
-                }
+                RandomLaughClientRpc(RandomNumberGenerator.GetInt32(1,11));
+                playerControllerB.KillPlayer(Vector3.up,true,CauseOfDeath.Unknown,1);
+                SwitchToBehaviourClientRpc(0);
             }
         }
     }
+    /*
+    [ClientRpc]
+    public void SwingAttackHitClientRpc()
+    {
+        
+    }*/
     [ClientRpc]
     public void RandomLaughClientRpc(int x)
     {
@@ -775,6 +811,7 @@ public class FreddyAi :  EnemyAI
     public void TeleportExecuteClientRpc(Vector3 position)
     {
         agent.Warp(position);
+        StartCoroutine(TransitionMaterial(true, 7));
         if (IsHost)
         {
             DoAnimationClientRpc("Teleport");
@@ -920,7 +957,6 @@ public class FreddyAi :  EnemyAI
                 // Check if there's a path from teleport position to player position
                 if (CanReach(teleportPosition, targetPlayer.transform.position))
                 {
-                    
                     ShowTeleportParticleClientRpc();
                     StartCoroutine(ExecuteTeleportFreddy(teleportPosition));
                     return;
@@ -1014,6 +1050,37 @@ public class FreddyAi :  EnemyAI
                 renderer.enabled = enable;
             }
         }
+    }
+    private IEnumerator TransitionMaterial(bool manifest, float time)
+    {
+        float elapsedTime = 0;
+
+        float startValue = shirt.GetFloat("Vector1_FEFF47F1");
+
+        float targetValue = manifest ? 0f : 1f;
+        if (manifest)
+        {
+            yield return new WaitForSeconds(1);
+        }
+        while (elapsedTime < time)
+        {
+            ModifyMaterial(Mathf.Lerp(startValue, targetValue, elapsedTime / time)); 
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        ModifyMaterial(targetValue);
+    }
+    public void ModifyMaterial(float x)
+    {
+        if (x < 1.01f && x >= 0.0f)
+        {
+            shirt.SetFloat("Vector1_FEFF47F1",x);;
+            pants.SetFloat("Vector1_FEFF47F1",x);;
+            hands.SetFloat("Vector1_FEFF47F1",x);;
+            claw.SetFloat("Vector1_FEFF47F1",x);;
+            face.SetFloat("Vector1_FEFF47F1",x);; 
+        }
+        
     }
     public void SetLocalIndex()
     {

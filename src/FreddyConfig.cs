@@ -34,6 +34,12 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
     [DataMember] public SyncedEntry<float> SOUND_CHILD_VOLUME { get; private set; } 
     
     
+    [DataMember] public SyncedEntry<int> STATE_INCREASE { get; private set; } 
+    
+    [DataMember] public SyncedEntry<float> SPEED_MODIFIER { get; private set; } 
+    [DataMember] public SyncedEntry<float> SPEED_MODIFIER_LAST_STAGE { get; private set; } 
+    
+    
     // TODO : Create a setting for the distance between player for a player to be alone or not
     
     public FreddyConfig(ConfigFile cfg) : base("FreddyKrueger")
@@ -100,7 +106,18 @@ public class FreddyConfig : SyncedConfig<FreddyConfig>
         );
         
         SOUND_CHILD_VOLUME = cfg.BindSyncedEntry("Sound Parameter", "Enter the Volume of the Child Singing", 0.5f,
-            "This value must be from 0.0f to 1.0f . Anything above or under will be treated as 0.0f or 1.0f"
+            "This value must be from 0.0f to 1.0f . Anything above or under will be treated as 0.0f or 1.0f. THIS DISABLES ALL MUSICS. A person told me they were afraid of copyrights"
+        );
+        
+        STATE_INCREASE = cfg.BindSyncedEntry("Difficulty modifier", "Behaviour other than walking chances", 20,
+            "This value must be above 0 up to infinite (Tho it will make Freddy always run). This upgrades the chances of freddy spawning with a special behaviour that is not walking"
+        );
+        
+        SPEED_MODIFIER = cfg.BindSyncedEntry("Difficulty modifier", "This number directly affects the speed of the Freddy", 3f,
+            "This value must not be lower than 0 and can be a decimal number. It is suggested to not put it lower than it already is"
+        );
+        SPEED_MODIFIER_LAST_STAGE = cfg.BindSyncedEntry("Difficulty modifier", "Added speed last stage", 0.1f,
+            "Every 0.2 seconds, this number will be added to Freddy's speed when he is running with his claw. a number like 1.0 is already a lot... Believe me... It can be a decimal number"
         );
         
         

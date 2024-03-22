@@ -90,8 +90,26 @@
 - Added a sound config to choose what we want the sound to be for all the melodies that play
 - Removed freddy's scan node because it gave me some problems with how it was handled when invisible
 - 
-## 2.1.12
+## 2.1.13
 - Removed a small bug that desynchronized freddy krueger from one player to another
+
+## 2.2.13
+- Added better rain particles when in the sleep world
+- Made the sound when entering sleep not replay after the first time
+- Made the sound when entering the last sleep stage not replay after the first time
+- Added a difficulty config
+- Upgraded base difficulty
+- Added a speed multiplier in last phase 
+- Added a config for the speed modifier
+- Added shadering on krueger
+- Remade Krueger teleportation animation
+- Added new sleep mechanic
+- Remade the rain particle
+- Added particle energy and spread it to make an effect of weirdness (IDK how to explain it really)
+
+## 2.2.14
+- Sent a build that was wrong in the previous patch, this patch works FR
+- Fixed a problem with the sneaking phase
 
 
 
