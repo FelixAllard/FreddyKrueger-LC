@@ -111,6 +111,10 @@
 - Sent a build that was wrong in the previous patch, this patch works FR
 - Fixed a problem with the sneaking phase
 
+## 2.2.15
+- Changed the particle model for optimization
+- Fixed a latency issue when Freddy spawned [FOUND BY : Saltymcfish]
+
 
 
 
