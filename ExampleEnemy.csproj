@@ -9,7 +9,7 @@
     <!-- Configure description for Thunderstore at ./Thunderstore/thunderstore.toml -->
     <Description>This is Freddy Krueger as a spawnable enemy</Description>
 		<!-- This is the version of your plugin. This will be used by tcli when building our Thunderstore package. -->
-    <Version>2.2.15</Version>
+    <Version>2.2.16</Version>
 		<!-- This is required for BepInEx to load us properly. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- This allows us to use C#11 features, for the most part. -->
@@ -33,6 +33,7 @@
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
     <PackageReference Include="Sigurd.BepInEx.CSync" Version="3.1.1" />
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" IncludeAssets="compile" />
+    <PackageReference Include="Xilophor.LethalNetworkAPI" Version="2.1.6" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -43,6 +44,9 @@
   <ItemGroup>
     <Reference Include="GraphicsAPI">
       <HintPath>dlls\GraphicsAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="OdinSerializer">
+      <HintPath>dlls\OdinSerializer.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine"><HintPath>../dlls/UnityEngine.CoreModule.dll</HintPath></Reference>
     <Reference Include="Assembly-CSharp"><HintPath>../dlls/Assembly-CSharp.dll</HintPath></Reference>

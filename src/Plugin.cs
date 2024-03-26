@@ -15,6 +15,7 @@ using UnityEngine.Rendering.HighDefinition;
 using Debug = UnityEngine.Debug;
 
 namespace ExampleEnemy {
+    [BepInDependency("LethalNetworkAPI")]
     [BepInDependency("com.sigurd.csync")] 
     [BepInPlugin(ModGUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency(LethalLib.Plugin.ModGUID)] 
