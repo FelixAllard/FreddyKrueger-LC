@@ -115,6 +115,12 @@
 - Changed the particle model for optimization
 - Fixed a latency issue when Freddy spawned [FOUND BY : Saltymcfish]
 
+## 2.3.15
+- Re-added Lethal network Api as a dependency!
+- Made network syncing more robust and using less conversion
+- Fixed a bug where Freddy's sleep particle would stay after sleep
+- Fixed a bug that Freddy would just never stop laughing after being seen in sneak mode ( Yes, the sneak mode is real )
+
 
 
 

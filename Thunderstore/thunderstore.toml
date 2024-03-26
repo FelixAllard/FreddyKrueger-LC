@@ -13,6 +13,8 @@ BepInEx-BepInExPack = "5.4.2100"
 Evaisa-LethalLib = "0.14.2"
 Sigurd-CSync = "3.1.1"
 Evaisa-HookGenPatcher = "0.0.5"
+xilophor-LethalNetworkAPI = "2.1.6"
+Lordfirespeed-OdinSerializer = "2022.11.9"
 
 [build]
 icon = "./icon.png"

@@ -307,6 +307,7 @@ public class FreddyAi :  EnemyAI
                     if (targetPlayer.HasLineOfSightToPosition(transform.position) && _freddySeen ==false)
                     {
                         StartCoroutine(FreddyGotSeen());
+                        _freddySeen = true;
                     }
                     break;
                 case (int)State.None:
@@ -333,7 +334,7 @@ public class FreddyAi :  EnemyAI
             _inCoroutine = true;
         }
 
-        _freddySeen = true;
+        _freddySeen = false;
     }
     //Business Handler Logic Server:
     IEnumerator SeeIfAccessible()
