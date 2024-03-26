@@ -58,7 +58,7 @@ public class FreddyAi :  EnemyAI
     
     
     
-    //private List<PlayerSleep> _playerSleep;
+    private List<PlayerSleep> _playerSleep;
     
     //Local Player Info
     private ulong _clientId;
@@ -85,7 +85,7 @@ public class FreddyAi :  EnemyAI
     
     private LethalServerMessage<List<PlayerSleep>> _serverMessageSleepArray;
     private LethalClientMessage<List<PlayerSleep>> _clientReceiveSleepArray;
-    public static LethalNetworkVariable<List<PlayerSleep>> _playerSleep = new LethalNetworkVariable<List<PlayerSleep>>(identifier: "freddyKruegerLC");
+    
     
     //PostProcess
     /*private PostProcessVisualsFreddy freddyPost;*/
@@ -115,18 +115,19 @@ public class FreddyAi :  EnemyAI
                 _enterSleep = 50;
             }
 
-            if (_maxSleep<= _enterSleep+80)
+            if (_maxSleep <= _enterSleep + 80)
             {
                 _maxSleep = _enterSleep + 80;
             }
         }
+
     }
-    
+
     public override void Start()
     {
         base.Start();
-        
-        
+        _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "customIdentifier");
+        _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: "customIdentifier", onReceived: SetSleep);
         /*RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
         
         // Assign the material to the Render Texture
@@ -173,8 +174,6 @@ public class FreddyAi :  EnemyAI
         freddyRain.Stop();
         freddyTeleport.Stop();
         
-        _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "freddySleep");
-        _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: "freddySleep", onReceived: SetSleep);
 
     }
 
@@ -362,6 +361,9 @@ public class FreddyAi :  EnemyAI
     // Sleep handler server
     public void UpdateSleep()
     {
+        
+
+
         if (_playerSleep != null)
         {
             CheckIfMissingPlayer();
@@ -435,10 +437,9 @@ public class FreddyAi :  EnemyAI
                 ChooseTarget();
             }
         }
-        //Sending computation to all client
+        //Sending computation to all clients
 
-        // Call the ClientRpc with the JSON string
-        
+        // Serialize the list to JSON
         _serverMessageSleepArray.SendAllClients(_playerSleep);
 
     }
@@ -560,7 +561,7 @@ public class FreddyAi :  EnemyAI
             if (_targetPlayerSleep.SleepMeter >=_enterSleep && _targetPlayerSleep.SleepMeter <_maxSleep)
             {
                 
-                if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE.Value)
+                if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE)
                 {
                     if (currentBehaviourStateIndex != 2)
                     {
@@ -569,7 +570,7 @@ public class FreddyAi :  EnemyAI
                     }
                     //RUNNING
                 }
-                else if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE.Value)
+                else if (_targetPlayerSleep.SleepMeter >= RandomNumberGenerator.GetInt32((_maxSleep-50),(_maxSleep+20))-FreddyConfig.Instance.STATE_INCREASE)
                 {
                     //Sneaking
                     if (currentBehaviourStateIndex != 4)
@@ -684,16 +685,17 @@ public class FreddyAi :  EnemyAI
     // CLIENT RPC SECTION
     public void SetSleep(List<PlayerSleep> x)
     {
-        Debug.Log("We got some values boysss" + x[0].SleepMeter);
-        _playerSleep = x;
+        Debug.Log("SLEEEP " + x[0].SleepMeter);
+        if (!IsHost)
+        {
+            if (_playerSleep != x)
+            {
+                _playerSleep = x;
+            }
+        }
         // We set the value
         //_playerSleep = playerSleeps;
         LocalPlayerFreddyHandler();
-    }
-    [ClientRpc]
-    public void ReinitialiseArrayClientRpc()
-    {
-        SetLocalIndex();
     }
 
     [ClientRpc]
@@ -759,6 +761,12 @@ public class FreddyAi :  EnemyAI
             }
         }
     }
+    /*
+    [ClientRpc]
+    public void SwingAttackHitClientRpc()
+    {
+        
+    }*/
     [ClientRpc]
     public void RandomLaughClientRpc(int x)
     {
@@ -877,8 +885,8 @@ public class FreddyAi :  EnemyAI
                     {
                         Debug.Log("Removing Player From array");
                         _playerSleep.Remove(player);
-                        //Replace array indexes
-                        ReinitialiseArrayClientRpc();
+                        _serverMessageSleepArray.SendAllClients(_playerSleep);
+                        
                     }
                 }
             }
@@ -1004,17 +1012,23 @@ public class FreddyAi :  EnemyAI
         EnableEnemyMesh(enable);
         if (enable == true)
         {
+
             creatureVoice.volume += 0.1f;
+
+                
             if (!freddyRain.isPlaying)
             {
                 freddyRain.Play();
             }
+                
+                
+                
         }
         else
         {
             freddyRain.Stop();
-            freddyRain.Clear();
             creatureVoice.volume -= 0.2f;
+                
         }
     }
     
@@ -1095,6 +1109,4 @@ public class FreddyAi :  EnemyAI
             _indexSleepArray = -1;
         }
     }
-    
-    //
 }

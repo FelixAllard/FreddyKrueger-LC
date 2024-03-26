@@ -30,9 +30,7 @@ public class PlayerSleep
         get => targetPoint;
         set => targetPoint = value;
     }
-    private ulong clientID;
-    private int sleepMeter;
-    private int targetPoint;
-    
-
+    public ulong clientID;
+    public int sleepMeter;
+    public int targetPoint;
 }
