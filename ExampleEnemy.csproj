@@ -9,7 +9,7 @@
     <!-- Configure description for Thunderstore at ./Thunderstore/thunderstore.toml -->
     <Description>This is Freddy Krueger as a spawnable enemy</Description>
 		<!-- This is the version of your plugin. This will be used by tcli when building our Thunderstore package. -->
-    <Version>2.3.15</Version>
+    <Version>2.3.16</Version>
 		<!-- This is required for BepInEx to load us properly. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- This allows us to use C#11 features, for the most part. -->

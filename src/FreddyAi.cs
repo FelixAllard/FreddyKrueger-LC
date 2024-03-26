@@ -85,6 +85,7 @@ public class FreddyAi :  EnemyAI
     
     private LethalServerMessage<List<PlayerSleep>> _serverMessageSleepArray;
     private LethalClientMessage<List<PlayerSleep>> _clientReceiveSleepArray;
+    private String identifier;
     
     
     //PostProcess
@@ -126,8 +127,7 @@ public class FreddyAi :  EnemyAI
     public override void Start()
     {
         base.Start();
-        _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: "customIdentifier");
-        _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: "customIdentifier", onReceived: SetSleep);
+        ChangeCustomModifierClientRpc();
         /*RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
         
         // Assign the material to the Render Texture
@@ -175,6 +175,13 @@ public class FreddyAi :  EnemyAI
         freddyTeleport.Stop();
         
 
+    }
+    [ClientRpc]
+    public void ChangeCustomModifierClientRpc()
+    {
+        String identifier = RandomNumberGenerator.GetInt32(0, 999999999).ToString()+RandomNumberGenerator.GetInt32(0, 999999999).ToString()+RandomNumberGenerator.GetInt32(0, 999999999).ToString();
+        _serverMessageSleepArray = new LethalServerMessage<List<PlayerSleep>>(identifier: identifier);
+        _clientReceiveSleepArray = new LethalClientMessage<List<PlayerSleep>>(identifier: identifier, onReceived: SetSleep);
     }
 
     public override void Update()
@@ -616,7 +623,7 @@ public class FreddyAi :  EnemyAI
     //Sleep handler Client
     private void LocalPlayerFreddyHandler()
         {
-            if (_indexSleepArray != -1 && !RoundManager.Instance.playersManager.localPlayerController.isPlayerDead)
+            if (_indexSleepArray != -1 && !RoundManager.Instance.playersManager.localPlayerController.isPlayerDead && _playerSleep.Count>0)
             {
                 if (targetPlayer != null && !targetPlayer.isPlayerControlled)
                 {
@@ -686,7 +693,10 @@ public class FreddyAi :  EnemyAI
     // CLIENT RPC SECTION
     public void SetSleep(List<PlayerSleep> x)
     {
-        Debug.Log("SLEEEP " + x[0].SleepMeter);
+        /*if (x.Count > 0)
+        {
+            Debug.Log("SLEEEP " + x[0].SleepMeter);
+        }*/
         if (!IsHost)
         {
             if (_playerSleep != x)

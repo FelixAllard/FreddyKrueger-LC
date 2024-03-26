@@ -121,8 +121,8 @@
 - Fixed a bug where Freddy's sleep particle would stay after sleep
 - Fixed a bug that Freddy would just never stop laughing after being seen in sneak mode ( Yes, the sneak mode is real )
 
-
-
+## 2.3.16
+- Fixed a constructor bug with lethal network api which rendered Freddy's second spawn as a bug! [FOUND BY : Notez]
 
 ## IN IMPLEMENTATION
 - Making more freddy voiceless
